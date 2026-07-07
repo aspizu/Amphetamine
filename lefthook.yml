@@ -1,0 +1,14 @@
+pre-commit:
+  parallel: true
+  jobs:
+    - name: fmt
+      run: pnpm fmt:check
+    - name: lint
+      run: pnpm lint
+    - name: rust-clippy
+      run: cargo clippy --manifest-path packages/client/src-tauri/Cargo.toml --all-targets -- -D warnings
+
+pre-push:
+  jobs:
+    - name: check
+      run: pnpm check

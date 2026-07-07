@@ -1,0 +1,11 @@
+{
+  "oxc.fmt.configPath": ".oxfmtrc.json",
+  "editor.defaultFormatter": "oxc.oxc-vscode",
+  "editor.formatOnSave": true,
+  "editor.formatOnSaveMode": "file",
+  "files.readonlyInclude": {
+    "**/pnpm-lock.yaml": true,
+    "**/dist/**": true,
+    "**/*.gen.*": true
+  }
+}

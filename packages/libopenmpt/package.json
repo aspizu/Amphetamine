@@ -1,0 +1,23 @@
+{
+  "name": "@amphetamine/libopenmpt",
+  "version": "0.1.0",
+  "private": true,
+  "files": [
+    "dist"
+  ],
+  "type": "module",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "scripts": {
+    "build": "pnpm run build:wasm && pnpm run build:ts",
+    "build:js": "esbuild src/index.ts --bundle --format=esm --platform=neutral --sourcemap --outfile=dist/index.js",
+    "build:ts": "pnpm run build:js && pnpm run build:types && cp src/libopenmpt.js.d.ts dist/libopenmpt.js.d.ts",
+    "build:types": "tsgo -p tsconfig.json --emitDeclarationOnly",
+    "build:wasm": "bash scripts/build-libopenmpt-wasm.sh",
+    "clean": "rm -rf dist ../../openmpt/bin ../../openmpt/build/obj"
+  },
+  "devDependencies": {
+    "@typescript/native-preview": "7.0.0-dev.20260624.1",
+    "esbuild": "^0.28.0"
+  }
+}

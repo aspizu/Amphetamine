@@ -1,0 +1,25 @@
+{
+  "$schema": "./node_modules/oxlint/configuration_schema.json",
+  "ignorePatterns": [
+    "node_modules",
+    "openmpt",
+    "packages/*/dist",
+    "packages/*/node_modules",
+    "packages/client/src/routeTree.gen.ts"
+  ],
+  "env": {
+    "browser": true
+  },
+  "plugins": ["react", "typescript"],
+  "rules": {
+    "typescript/consistent-type-imports": [
+      "error",
+      {"fixStyle": "separate-type-imports", "prefer": "type-imports"}
+    ],
+    "typescript/no-deprecated": "error",
+    "typescript/no-floating-promises": "error",
+    "typescript/await-thenable": "error",
+    "typescript/no-misused-promises": "error"
+  },
+  "options": {"typeAware": true}
+}

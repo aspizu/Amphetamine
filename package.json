@@ -1,0 +1,35 @@
+{
+  "scripts": {
+    "build": "pnpm --filter @amphetamine/libopenmpt build",
+    "build:client": "pnpm --filter @amphetamine/client build",
+    "build:ts": "pnpm --filter @amphetamine/libopenmpt build:ts",
+    "build:wasm": "pnpm --filter @amphetamine/libopenmpt build:wasm",
+    "clean": "pnpm --filter @amphetamine/libopenmpt clean",
+    "dev": "pnpm --filter @amphetamine/client dev",
+    "fmt": "oxfmt",
+    "fmt:check": "oxfmt --check",
+    "lint": "oxlint",
+    "prepare": "lefthook install",
+    "check": "pnpm --filter @amphetamine/client check",
+    "tauri:build:mac": "pnpm --filter @amphetamine/client tauri:build:mac",
+    "tauri:dev": "pnpm --filter @amphetamine/client tauri:dev"
+  },
+  "devDependencies": {
+    "lefthook": "^2.1.9",
+    "oxfmt": "^0.56.0",
+    "oxlint": "^1.71.0",
+    "oxlint-tsgolint": "^0.23.0"
+  },
+  "devEngines": {
+    "packageManager": {
+      "name": "pnpm",
+      "version": "^11.0.0",
+      "onFail": "warn"
+    },
+    "runtime": {
+      "name": "node",
+      "version": "^26.0.0",
+      "onFail": "warn"
+    }
+  }
+}
