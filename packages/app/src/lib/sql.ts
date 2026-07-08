@@ -14,14 +14,14 @@ export default class Database {
   execute(query: string, bindValues?: unknown[]): Promise<QueryResult>
   execute(strings: TemplateStringsArray, ...values: unknown[]): Promise<QueryResult>
   execute(query: string | TemplateStringsArray, ...values: unknown[]) {
-    const [sql, bindValues] = parseQuery(query, values)
+    const [sql, bindValues] = _parseQuery(query, values)
     return this.#db.execute(sql, bindValues)
   }
 
   select<T = unknown>(query: string, bindValues?: unknown[]): Promise<T>
   select<T = unknown>(strings: TemplateStringsArray, ...values: unknown[]): Promise<T>
   select<T = unknown>(query: string | TemplateStringsArray, ...values: unknown[]) {
-    const [sql, bindValues] = parseQuery(query, values)
+    const [sql, bindValues] = _parseQuery(query, values)
     return this.#db.select<T>(sql, bindValues)
   }
 
@@ -30,18 +30,18 @@ export default class Database {
   }
 }
 
-function parseQuery(
+function _parseQuery(
   query: string | TemplateStringsArray,
   values: unknown[],
 ): [string, unknown[] | undefined] {
-  const bindValues = values.map(normalizeBindValue)
+  const bindValues = values.map(_normalizeBindValue)
   if (typeof query === "string") {
-    return [query, (values[0] as unknown[] | undefined)?.map(normalizeBindValue)]
+    return [query, (values[0] as unknown[] | undefined)?.map(_normalizeBindValue)]
   }
   return [String.raw({raw: query}, ...bindValues.map((_, i) => `$${i + 1}`)), bindValues]
 }
 
-function normalizeBindValue(value: unknown) {
+function _normalizeBindValue(value: unknown) {
   if (value === undefined) {
     return null
   }

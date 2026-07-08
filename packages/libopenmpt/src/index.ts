@@ -49,6 +49,9 @@ type CreateLibopenmpt = (options?: LibopenmptModuleOptions) => Promise<Libopenmp
 
 const OPENMPT_MODULE_RENDER_STEREOSEPARATION_PERCENT = 2
 const OPENMPT_MODULE_RENDER_INTERPOLATIONFILTER_LENGTH = 3
+const WAV_CHANNEL_COUNT = 2
+const WAV_BYTES_PER_SAMPLE = 2
+const WAV_HEADER_BYTES = 44
 
 export interface ModuleRenderOptions {
   repeatCount?: number
@@ -60,7 +63,6 @@ export interface StereoChunk {
   frames: number
   left: Float32Array
   right: Float32Array
-  ended: boolean
 }
 
 export interface WavRenderOptions {
@@ -71,7 +73,7 @@ export interface WavRenderOptions {
   chunkFrames?: number
 }
 
-export interface RenderModuleToWavBlobOptions extends WavRenderOptions {
+export interface RenderModuleToWavBufferOptions extends WavRenderOptions {
   runtimeOptions?: LibopenmptModuleOptions
 }
 
@@ -84,7 +86,7 @@ export async function loadLibopenmpt(
     default: CreateLibopenmpt
   }
 
-  const wasmBinary = options.wasmBinary ?? (await fetchWasmBinary(wasmPath))
+  const wasmBinary = options.wasmBinary ?? (await _fetchWasmBinary(wasmPath))
   const locateFile =
     options.locateFile ??
     ((path: string) => {
@@ -102,7 +104,7 @@ export async function loadLibopenmpt(
   })
 }
 
-async function fetchWasmBinary(wasmPath: string): Promise<ArrayBuffer> {
+async function _fetchWasmBinary(wasmPath: string): Promise<ArrayBuffer> {
   const response = await fetch(wasmPath)
 
   if (!response.ok) {
@@ -112,16 +114,13 @@ async function fetchWasmBinary(wasmPath: string): Promise<ArrayBuffer> {
   return response.arrayBuffer()
 }
 
-export async function renderModuleToWavBlob(
-  moduleBlob: Blob,
-  options: RenderModuleToWavBlobOptions = {},
-): Promise<Blob> {
+export async function renderModuleToWavBuffer(
+  moduleBytes: Uint8Array,
+  options: RenderModuleToWavBufferOptions = {},
+): Promise<ArrayBuffer> {
   const {runtimeOptions, ...renderOptions} = options
   const runtime = await loadLibopenmpt(runtimeOptions)
-  const moduleBytes = new Uint8Array(await moduleBlob.arrayBuffer())
-  const wavBuffer = renderModuleBytesToWavBuffer(runtime, moduleBytes, renderOptions)
-
-  return new Blob([wavBuffer], {type: "audio/wav"})
+  return renderModuleBytesToWavBuffer(runtime, moduleBytes, renderOptions)
 }
 
 export class OpenMptModule {
@@ -156,7 +155,7 @@ export class OpenMptModule {
       }
 
       const mod = new OpenMptModule(runtime, modulePtr)
-      mod.applyRenderOptions(options)
+      mod._applyRenderOptions(options)
       return mod
     } finally {
       runtime._free(dataPtr)
@@ -183,8 +182,8 @@ export class OpenMptModule {
   }
 
   readStereo(sampleRate: number, frameCount: number): StereoChunk {
-    this.assertAlive()
-    this.ensureAudioBuffers(frameCount)
+    this._assertAlive()
+    this._ensureAudioBuffers(frameCount)
 
     const frames = this.runtime._openmpt_module_read_float_stereo(
       this.modulePtr,
@@ -196,39 +195,38 @@ export class OpenMptModule {
 
     const leftOffset = this.leftPtr / Float32Array.BYTES_PER_ELEMENT
     const rightOffset = this.rightPtr / Float32Array.BYTES_PER_ELEMENT
-    const left = this.runtime.HEAPF32.slice(leftOffset, leftOffset + frames)
-    const right = this.runtime.HEAPF32.slice(rightOffset, rightOffset + frames)
+    const left = this.runtime.HEAPF32.subarray(leftOffset, leftOffset + frames)
+    const right = this.runtime.HEAPF32.subarray(rightOffset, rightOffset + frames)
 
     return {
       frames,
       left,
       right,
-      ended: frames === 0,
     }
   }
 
   duration(): number {
-    this.assertAlive()
+    this._assertAlive()
     return this.runtime._openmpt_module_get_duration_seconds(this.modulePtr)
   }
 
   position(): number {
-    this.assertAlive()
+    this._assertAlive()
     return this.runtime._openmpt_module_get_position_seconds(this.modulePtr)
   }
 
   seek(seconds: number): number {
-    this.assertAlive()
+    this._assertAlive()
     return this.runtime._openmpt_module_set_position_seconds(this.modulePtr, seconds)
   }
 
   metadata(): Record<string, string> {
-    this.assertAlive()
+    this._assertAlive()
 
     const keysPtr = this.runtime._openmpt_module_get_metadata_keys(this.modulePtr)
     let keys: string[]
     try {
-      keys = this.readString(keysPtr).split(";").filter(Boolean)
+      keys = this._readString(keysPtr).split(";").filter(Boolean)
     } finally {
       if (keysPtr !== 0) {
         this.runtime._openmpt_free_string(keysPtr)
@@ -237,10 +235,10 @@ export class OpenMptModule {
 
     const data: Record<string, string> = {}
     for (const key of keys) {
-      const keyPtr = this.writeString(key)
+      const keyPtr = this._writeString(key)
       const valuePtr = this.runtime._openmpt_module_get_metadata(this.modulePtr, keyPtr)
       try {
-        data[key] = this.readString(valuePtr)
+        data[key] = this._readString(valuePtr)
       } finally {
         if (valuePtr !== 0) {
           this.runtime._openmpt_free_string(valuePtr)
@@ -253,40 +251,40 @@ export class OpenMptModule {
   }
 
   getCurrentRow(): number {
-    this.assertAlive()
+    this._assertAlive()
     return this.runtime._openmpt_module_get_current_row(this.modulePtr)
   }
 
   getCurrentPattern(): number {
-    this.assertAlive()
+    this._assertAlive()
     return this.runtime._openmpt_module_get_current_pattern(this.modulePtr)
   }
 
   getCurrentOrder(): number {
-    this.assertAlive()
+    this._assertAlive()
     return this.runtime._openmpt_module_get_current_order(this.modulePtr)
   }
 
   getNumOrders(): number {
-    this.assertAlive()
+    this._assertAlive()
     return this.runtime._openmpt_module_get_num_orders(this.modulePtr)
   }
 
   getNumPatterns(): number {
-    this.assertAlive()
+    this._assertAlive()
     return this.runtime._openmpt_module_get_num_patterns(this.modulePtr)
   }
 
   getNumChannels(): number {
-    this.assertAlive()
+    this._assertAlive()
     return this.runtime._openmpt_module_get_num_channels(this.modulePtr)
   }
 
   ctlSet(ctl: string, value: string): boolean {
-    this.assertAlive()
+    this._assertAlive()
 
-    const ctlPtr = this.writeString(ctl)
-    const valuePtr = this.writeString(value)
+    const ctlPtr = this._writeString(ctl)
+    const valuePtr = this._writeString(value)
     try {
       return this.runtime._openmpt_module_ctl_set(this.modulePtr, ctlPtr, valuePtr) === 1
     } finally {
@@ -295,7 +293,7 @@ export class OpenMptModule {
     }
   }
 
-  private applyRenderOptions(options: ModuleRenderOptions): void {
+  private _applyRenderOptions(options: ModuleRenderOptions): void {
     if (options.repeatCount !== undefined) {
       this.runtime._openmpt_module_set_repeat_count(this.modulePtr, options.repeatCount)
     }
@@ -317,7 +315,7 @@ export class OpenMptModule {
     }
   }
 
-  private ensureAudioBuffers(frameCount: number): void {
+  private _ensureAudioBuffers(frameCount: number): void {
     if (frameCount <= this.frameCapacity) {
       return
     }
@@ -335,14 +333,14 @@ export class OpenMptModule {
     this.frameCapacity = frameCount
   }
 
-  private writeString(value: string): number {
+  private _writeString(value: string): number {
     const encoded = new TextEncoder().encode(`${value}\0`)
     const ptr = this.runtime._malloc(encoded.byteLength)
     this.runtime.HEAPU8.set(encoded, ptr)
     return ptr
   }
 
-  private readString(ptr: number): string {
+  private _readString(ptr: number): string {
     if (ptr === 0) {
       return ""
     }
@@ -355,7 +353,7 @@ export class OpenMptModule {
     return new TextDecoder().decode(this.runtime.HEAPU8.subarray(ptr, end))
   }
 
-  private assertAlive(): void {
+  private _assertAlive(): void {
     if (this.modulePtr === 0) {
       throw new Error("OpenMptModule has been destroyed")
     }
@@ -369,77 +367,93 @@ export function renderModuleBytesToWavBuffer(
 ): ArrayBuffer {
   const sampleRate = options.sampleRate ?? 48000
   const chunkFrames = options.chunkFrames ?? 4096
+  const frameCount = _countRenderedFrames(
+    runtime,
+    moduleBytes,
+    options,
+    sampleRate,
+    chunkFrames,
+  )
+  const sampleCount = frameCount * WAV_CHANNEL_COUNT
+  const buffer = _createWavBuffer(sampleCount, sampleRate)
+  const view = new DataView(buffer)
   const mod = OpenMptModule.fromBytes(runtime, moduleBytes, options)
-  const chunks: Float32Array[] = []
-  let sampleCount = 0
+  let offset = WAV_HEADER_BYTES
 
   try {
-    while (true) {
+    for (;;) {
       const chunk = mod.readStereo(sampleRate, chunkFrames)
-      if (chunk.ended) {
+      if (chunk.frames === 0) {
         break
       }
 
-      const interleaved = new Float32Array(chunk.frames * 2)
       for (let frame = 0; frame < chunk.frames; frame += 1) {
-        interleaved[frame * 2] = chunk.left[frame]
-        interleaved[frame * 2 + 1] = chunk.right[frame]
+        const left = Math.max(-1, Math.min(1, chunk.left[frame]))
+        view.setInt16(offset, left < 0 ? left * 0x8000 : left * 0x7fff, true)
+        offset += WAV_BYTES_PER_SAMPLE
+        const right = Math.max(-1, Math.min(1, chunk.right[frame]))
+        view.setInt16(offset, right < 0 ? right * 0x8000 : right * 0x7fff, true)
+        offset += WAV_BYTES_PER_SAMPLE
       }
-
-      sampleCount += interleaved.length
-      chunks.push(interleaved)
     }
   } finally {
     mod.destroy()
   }
 
-  return encodeWavPcm16(chunks, sampleCount, sampleRate)
-}
-
-function encodeWavPcm16(
-  chunks: Float32Array[],
-  sampleCount: number,
-  sampleRate: number,
-): ArrayBuffer {
-  const bytesPerSample = 2
-  const channelCount = 2
-  const dataBytes = sampleCount * bytesPerSample
-
-  if (dataBytes > 0xffffffff - 44) {
-    throw new Error("Rendered audio is too large for a WAV file")
-  }
-
-  const buffer = new ArrayBuffer(44 + dataBytes)
-  const view = new DataView(buffer)
-
-  writeAscii(view, 0, "RIFF")
-  view.setUint32(4, 36 + dataBytes, true)
-  writeAscii(view, 8, "WAVE")
-  writeAscii(view, 12, "fmt ")
-  view.setUint32(16, 16, true)
-  view.setUint16(20, 1, true)
-  view.setUint16(22, channelCount, true)
-  view.setUint32(24, sampleRate, true)
-  view.setUint32(28, sampleRate * channelCount * bytesPerSample, true)
-  view.setUint16(32, channelCount * bytesPerSample, true)
-  view.setUint16(34, bytesPerSample * 8, true)
-  writeAscii(view, 36, "data")
-  view.setUint32(40, dataBytes, true)
-
-  let offset = 44
-  for (const chunk of chunks) {
-    for (const sample of chunk) {
-      const clamped = Math.max(-1, Math.min(1, sample))
-      const pcm = clamped < 0 ? clamped * 0x8000 : clamped * 0x7fff
-      view.setInt16(offset, pcm, true)
-      offset += bytesPerSample
-    }
-  }
-
   return buffer
 }
 
-function writeAscii(view: DataView, offset: number, text: string): void {
+function _countRenderedFrames(
+  runtime: LibopenmptRuntime,
+  moduleBytes: Uint8Array,
+  options: WavRenderOptions,
+  sampleRate: number,
+  chunkFrames: number,
+): number {
+  const mod = OpenMptModule.fromBytes(runtime, moduleBytes, options)
+  let frameCount = 0
+
+  try {
+    for (;;) {
+      const chunk = mod.readStereo(sampleRate, chunkFrames)
+      if (chunk.frames === 0) {
+        return frameCount
+      }
+
+      frameCount += chunk.frames
+    }
+  } finally {
+    mod.destroy()
+  }
+}
+
+function _createWavBuffer(sampleCount: number, sampleRate: number): ArrayBuffer {
+  const dataBytes = sampleCount * WAV_BYTES_PER_SAMPLE
+
+  if (dataBytes > 0xffffffff - WAV_HEADER_BYTES) {
+    throw new Error("Rendered audio is too large for a WAV file")
+  }
+
+  const buffer = new ArrayBuffer(WAV_HEADER_BYTES + dataBytes)
+  const view = new DataView(buffer)
+
+  _writeAscii(view, 0, "RIFF")
+  view.setUint32(4, 36 + dataBytes, true)
+  _writeAscii(view, 8, "WAVE")
+  _writeAscii(view, 12, "fmt ")
+  view.setUint32(16, 16, true)
+  view.setUint16(20, 1, true)
+  view.setUint16(22, WAV_CHANNEL_COUNT, true)
+  view.setUint32(24, sampleRate, true)
+  view.setUint32(28, sampleRate * WAV_CHANNEL_COUNT * WAV_BYTES_PER_SAMPLE, true)
+  view.setUint16(32, WAV_CHANNEL_COUNT * WAV_BYTES_PER_SAMPLE, true)
+  view.setUint16(34, WAV_BYTES_PER_SAMPLE * 8, true)
+  _writeAscii(view, 36, "data")
+  view.setUint32(40, dataBytes, true)
+
+  return buffer
+}
+function _writeAscii(view: DataView, offset: number, text: string): void {
   for (let index = 0; index < text.length; index += 1) {
     view.setUint8(offset + index, text.charCodeAt(index))
   }
