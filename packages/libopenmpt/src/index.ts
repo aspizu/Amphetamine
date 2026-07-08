@@ -78,9 +78,9 @@ export interface RenderModuleToWavBlobOptions extends WavRenderOptions {
 export async function loadLibopenmpt(
   options: LibopenmptModuleOptions = {},
 ): Promise<LibopenmptRuntime> {
-  const modulePath = new URL("./libopenmpt.js", import.meta.url).href
-  const wasmPath = new URL("./libopenmpt.wasm", import.meta.url).href
-  const {default: createLibopenmpt} = (await import(modulePath)) as {
+  const modulePath = new URL("../dist/libopenmpt.js", import.meta.url).href
+  const wasmPath = new URL("../dist/libopenmpt.wasm", import.meta.url).href
+  const {default: createLibopenmpt} = (await import(/* @vite-ignore */ modulePath)) as {
     default: CreateLibopenmpt
   }
 

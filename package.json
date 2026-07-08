@@ -2,7 +2,6 @@
   "scripts": {
     "build": "pnpm --filter @amphetamine/libopenmpt build",
     "build:app": "pnpm --filter @amphetamine/app build",
-    "build:ts": "pnpm --filter @amphetamine/libopenmpt build:ts",
     "build:wasm": "pnpm --filter @amphetamine/libopenmpt build:wasm",
     "clean": "pnpm --filter @amphetamine/libopenmpt clean",
     "dev": "pnpm --filter @amphetamine/app dev",
