@@ -1,18 +1,18 @@
 {
   "scripts": {
     "build": "pnpm --filter @amphetamine/libopenmpt build",
-    "build:client": "pnpm --filter @amphetamine/client build",
+    "build:app": "pnpm --filter @amphetamine/app build",
     "build:ts": "pnpm --filter @amphetamine/libopenmpt build:ts",
     "build:wasm": "pnpm --filter @amphetamine/libopenmpt build:wasm",
     "clean": "pnpm --filter @amphetamine/libopenmpt clean",
-    "dev": "pnpm --filter @amphetamine/client dev",
+    "dev": "pnpm --filter @amphetamine/app dev",
     "fmt": "oxfmt",
     "fmt:check": "oxfmt --check",
     "lint": "oxlint",
     "prepare": "lefthook install",
-    "check": "pnpm --filter @amphetamine/client check",
-    "tauri:build:mac": "pnpm --filter @amphetamine/client tauri:build:mac",
-    "tauri:dev": "pnpm --filter @amphetamine/client tauri:dev"
+    "check": "pnpm --filter @amphetamine/app check",
+    "tauri:build:mac": "pnpm --filter @amphetamine/app tauri:build:mac",
+    "tauri:dev": "pnpm --filter @amphetamine/app tauri:dev"
   },
   "devDependencies": {
     "lefthook": "^2.1.9",

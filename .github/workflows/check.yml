@@ -70,10 +70,10 @@ jobs:
           components: clippy
 
       - name: Rust Clippy
-        run: cargo clippy --manifest-path packages/client/src-tauri/Cargo.toml --all-targets -- -D warnings
+        run: cargo clippy --manifest-path packages/app/src-tauri/Cargo.toml --all-targets -- -D warnings
 
-  client:
-    name: Client
+  app:
+    name: App
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
