@@ -1,11 +1,11 @@
-interface EmscriptenModuleOptions {
+export interface LibopenmptModuleOptions {
   locateFile?: (path: string, scriptDirectory: string) => string
   wasmBinary?: ArrayBuffer | Uint8Array
   print?: (text: string) => void
   printErr?: (text: string) => void
 }
 
-interface LibopenmptEmscriptenModule {
+export interface LibopenmptRuntime {
   HEAPU8: Uint8Array
   HEAPF32: Float32Array
   _malloc(size: number): number
@@ -45,23 +45,18 @@ interface LibopenmptEmscriptenModule {
   _openmpt_module_ctl_set(modulePtr: number, ctlPtr: number, valuePtr: number): number
 }
 
-type CreateLibopenmpt = (
-  options?: EmscriptenModuleOptions,
-) => Promise<LibopenmptEmscriptenModule>
-
-type LibopenmptModuleOptions = EmscriptenModuleOptions
-type LibopenmptRuntime = LibopenmptEmscriptenModule
+type CreateLibopenmpt = (options?: LibopenmptModuleOptions) => Promise<LibopenmptRuntime>
 
 const OPENMPT_MODULE_RENDER_STEREOSEPARATION_PERCENT = 2
 const OPENMPT_MODULE_RENDER_INTERPOLATIONFILTER_LENGTH = 3
 
-interface ModuleRenderOptions {
+export interface ModuleRenderOptions {
   repeatCount?: number
   stereoSeparation?: number
   interpolationFilter?: number
 }
 
-interface StereoChunk {
+export interface StereoChunk {
   frames: number
   left: Float32Array
   right: Float32Array
@@ -76,7 +71,11 @@ export interface WavRenderOptions {
   chunkFrames?: number
 }
 
-async function loadLibopenmpt(
+export interface RenderModuleToWavBlobOptions extends WavRenderOptions {
+  runtimeOptions?: LibopenmptModuleOptions
+}
+
+export async function loadLibopenmpt(
   options: LibopenmptModuleOptions = {},
 ): Promise<LibopenmptRuntime> {
   const modulePath = new URL("./libopenmpt.js", import.meta.url).href
@@ -115,16 +114,17 @@ async function fetchWasmBinary(wasmPath: string): Promise<ArrayBuffer> {
 
 export async function renderModuleToWavBlob(
   moduleBlob: Blob,
-  options: WavRenderOptions = {},
+  options: RenderModuleToWavBlobOptions = {},
 ): Promise<Blob> {
-  const runtime = await loadLibopenmpt()
+  const {runtimeOptions, ...renderOptions} = options
+  const runtime = await loadLibopenmpt(runtimeOptions)
   const moduleBytes = new Uint8Array(await moduleBlob.arrayBuffer())
-  const wavBuffer = renderModuleToWavBuffer(runtime, moduleBytes, options)
+  const wavBuffer = renderModuleBytesToWavBuffer(runtime, moduleBytes, renderOptions)
 
   return new Blob([wavBuffer], {type: "audio/wav"})
 }
 
-class OpenMptModule {
+export class OpenMptModule {
   private leftPtr = 0
   private rightPtr = 0
   private frameCapacity = 0
@@ -194,8 +194,10 @@ class OpenMptModule {
       this.rightPtr,
     )
 
-    const left = this.runtime.HEAPF32.slice(this.leftPtr / 4, this.leftPtr / 4 + frames)
-    const right = this.runtime.HEAPF32.slice(this.rightPtr / 4, this.rightPtr / 4 + frames)
+    const leftOffset = this.leftPtr / Float32Array.BYTES_PER_ELEMENT
+    const rightOffset = this.rightPtr / Float32Array.BYTES_PER_ELEMENT
+    const left = this.runtime.HEAPF32.slice(leftOffset, leftOffset + frames)
+    const right = this.runtime.HEAPF32.slice(rightOffset, rightOffset + frames)
 
     return {
       frames,
@@ -360,10 +362,10 @@ class OpenMptModule {
   }
 }
 
-function renderModuleToWavBuffer(
+export function renderModuleBytesToWavBuffer(
   runtime: LibopenmptRuntime,
   moduleBytes: Uint8Array,
-  options: WavRenderOptions,
+  options: WavRenderOptions = {},
 ): ArrayBuffer {
   const sampleRate = options.sampleRate ?? 48000
   const chunkFrames = options.chunkFrames ?? 4096
