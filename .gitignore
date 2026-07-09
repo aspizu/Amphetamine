@@ -1,2 +1,4 @@
 node_modules/
 /openmpt/
+target/
+Cargo.lock

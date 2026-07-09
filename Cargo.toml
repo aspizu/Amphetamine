@@ -1,0 +1,2 @@
+[workspace]
+members = ["packages/app/src-tauri"]
