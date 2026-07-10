@@ -1,11 +1,10 @@
-import {BaseDirectory, mkdir, readFile, writeFile} from "@tauri-apps/plugin-fs"
-
 import {branchOff} from "./background"
+import {getBlob, putBlob} from "./blobs"
 import Database from "./sql"
 
 const db = Database.get("sqlite:cache.db")
 
-async function _modarchiveModuleDownloader(id: number): Promise<Uint8Array> {
+async function _modarchiveModuleDownloader(id: number) {
   const res = await fetch(`https://api.modarchive.org/downloads.php?moduleid=${id}`)
   if (!res.ok) {
     throw new Error(`failed to download module ${id} from api.modarchive.org`)
@@ -31,9 +30,7 @@ export async function getModule(id: number) {
   `
   if (row.length > 0) {
     try {
-      const bytes = await readFile(`modules/${id}.mod`, {
-        baseDir: BaseDirectory.AppCache,
-      })
+      const bytes = await getBlob(`modules/${id}.mod`)
       if (_looksLikeModule(bytes)) {
         branchOff(async () => {
           await db.execute`
@@ -53,13 +50,7 @@ export async function getModule(id: number) {
   }
 
   branchOff(async () => {
-    await mkdir("modules", {
-      baseDir: BaseDirectory.AppCache,
-      recursive: true,
-    })
-    await writeFile(`modules/${id}.mod`, moduleBytes, {
-      baseDir: BaseDirectory.AppCache,
-    })
+    await putBlob(`modules/${id}.mod`, moduleBytes)
     await db.execute`
       INSERT INTO module (id, last_accessed_at)
       VALUES (${id}, ${lastAccessedAt})
