@@ -13,14 +13,6 @@ async function _modarchiveModuleDownloader(id: number): Promise<Uint8Array> {
   return new Uint8Array(await res.arrayBuffer())
 }
 
-// THANKS: Composer 2.5 I WAS BLASTING MY HEAD as to why the hell
-// was cached songs not loading because of a race condition between caching
-// and rendering.
-
-function _moduleBytes(bytes: Uint8Array): Uint8Array {
-  return Uint8Array.from(bytes)
-}
-
 // NOTE: this only rules out cached HTML error pages (e.g. a 200 response
 // with an HTML body from modarchive). It does NOT validate the file is a
 // well-formed module. truncated/corrupt downloads CAN STILL PASS this check.
@@ -48,8 +40,9 @@ export async function getModule(id: number) {
             UPDATE module SET last_accessed_at = ${lastAccessedAt} WHERE id = ${id}
           `
         })
-        return _moduleBytes(bytes)
+        return bytes
       }
+      // Cached module is corrupt, so fall through and refresh it.
     } catch {
       // The SQLite row can outlive the cache file, so fall through and refresh it.
     }
@@ -59,13 +52,12 @@ export async function getModule(id: number) {
     throw new Error(`downloaded data for module ${id} does not look like a module`)
   }
 
-  const cacheBytes = _moduleBytes(moduleBytes)
   branchOff(async () => {
     await mkdir("modules", {
       baseDir: BaseDirectory.AppCache,
       recursive: true,
     })
-    await writeFile(`modules/${id}.mod`, cacheBytes, {
+    await writeFile(`modules/${id}.mod`, moduleBytes, {
       baseDir: BaseDirectory.AppCache,
     })
     await db.execute`
@@ -75,7 +67,7 @@ export async function getModule(id: number) {
         last_accessed_at = excluded.last_accessed_at
     `
   })
-  return _moduleBytes(moduleBytes)
+  return moduleBytes
 }
 
 // TODO: add a way to invalidate the cache, even if sql columns are missing

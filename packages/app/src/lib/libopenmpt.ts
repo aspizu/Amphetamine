@@ -30,7 +30,7 @@ function _sendToWorker(
         _worker = undefined
         reject(new Error(event.message))
       }
-      worker.postMessage(request, [request.moduleBytes.buffer])
+      worker.postMessage(request)
     }),
     _toError,
   )
