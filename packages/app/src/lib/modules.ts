@@ -1,8 +1,7 @@
+import {getItem, setItem} from "localforage"
+
 import {branchOff} from "./background"
 import {getBlob, putBlob} from "./blobs"
-import Database from "./sql"
-
-const db = Database.get("sqlite:cache.db")
 
 async function _modarchiveModuleDownloader(id: number) {
   const res = await fetch(`https://api.modarchive.org/downloads.php?moduleid=${id}`)
@@ -25,17 +24,13 @@ function _looksLikeModule(bytes: Uint8Array): boolean {
 
 export async function getModule(id: number) {
   const lastAccessedAt = new Date()
-  const row = await db.select<{id: number}[]>`
-    SELECT id FROM module WHERE id = ${id}
-  `
-  if (row.length > 0) {
+  const meta = await getItem<{lastAccessedAt: string}>(`modules/${id}`)
+  if (meta === null) {
     try {
       const bytes = await getBlob(`modules/${id}.mod`)
       if (_looksLikeModule(bytes)) {
         branchOff(async () => {
-          await db.execute`
-            UPDATE module SET last_accessed_at = ${lastAccessedAt} WHERE id = ${id}
-          `
+          await setItem(`modules/${id}`, {lastAccessedAt: lastAccessedAt.toISOString()})
         })
         return bytes
       }
@@ -51,12 +46,7 @@ export async function getModule(id: number) {
 
   branchOff(async () => {
     await putBlob(`modules/${id}.mod`, moduleBytes)
-    await db.execute`
-      INSERT INTO module (id, last_accessed_at)
-      VALUES (${id}, ${lastAccessedAt})
-      ON CONFLICT(id) DO UPDATE SET
-        last_accessed_at = excluded.last_accessed_at
-    `
+    await setItem(`modules/${id}`, {lastAccessedAt: lastAccessedAt.toISOString()})
   })
   return moduleBytes
 }
