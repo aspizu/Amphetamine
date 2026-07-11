@@ -24,13 +24,13 @@ function _looksLikeModule(bytes: Uint8Array): boolean {
 
 export async function getModule(id: number) {
   const lastAccessedAt = new Date()
-  const meta = await getItem<{lastAccessedAt: string}>(`modules/${id}`)
+  const meta = await getItem<{lastAccessedAt: string}>(`module/${id}/blob-info`)
   if (meta === null) {
     try {
-      const bytes = await getBlob(`modules/${id}.mod`)
+      const bytes = await getBlob(`module/${id}/blob`)
       if (_looksLikeModule(bytes)) {
         branchOff(async () => {
-          await setItem(`modules/${id}`, {lastAccessedAt: lastAccessedAt.toISOString()})
+          await setItem(`module/${id}/blob`, {lastAccessedAt: lastAccessedAt.toISOString()})
         })
         return bytes
       }
@@ -45,8 +45,8 @@ export async function getModule(id: number) {
   }
 
   branchOff(async () => {
-    await putBlob(`modules/${id}.mod`, moduleBytes)
-    await setItem(`modules/${id}`, {lastAccessedAt: lastAccessedAt.toISOString()})
+    await putBlob(`module/${id}/blob`, moduleBytes)
+    await setItem(`module/${id}/blob-info`, {lastAccessedAt: lastAccessedAt.toISOString()})
   })
   return moduleBytes
 }
