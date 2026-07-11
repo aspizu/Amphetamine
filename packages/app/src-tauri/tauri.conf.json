@@ -23,11 +23,6 @@
       "csp": null
     }
   },
-  "plugins": {
-    "sql": {
-      "preload": ["sqlite:cache.db"]
-    }
-  },
   "bundle": {
     "active": true,
     "targets": ["app", "dmg"],
