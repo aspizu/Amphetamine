@@ -9,6 +9,7 @@
     "fmt:check": "oxfmt --check",
     "lint": "oxlint",
     "prepare": "lefthook install",
+    "test": "pnpm --filter @amphetamine/app test",
     "check": "pnpm --filter @amphetamine/app check",
     "tauri:build:mac": "pnpm --filter @amphetamine/app tauri:build:mac",
     "tauri:dev": "pnpm --filter @amphetamine/app tauri:dev"
