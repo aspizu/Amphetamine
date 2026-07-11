@@ -29,5 +29,9 @@ describe("getModuleInfo", () => {
     const first = await getModuleInfo(212083)
     expect(first).toEqual(expected)
     await expect(getModuleInfo(212083)).resolves.toBe(first)
+    expect(cache.get("module/212083/info")).toEqual({
+      info: expected,
+      lastAccessedAt: expect.stringMatching(/^\d{4}-\d{2}-\d{2}T/),
+    })
   })
 })

@@ -62,11 +62,17 @@ async function _proxiedModuleInfoFetcher(id: number): Promise<ModuleInfo> {
 }
 
 export async function getModuleInfo(id: number): Promise<ModuleInfo> {
-  const cached = await getItem<ModuleInfo>(`module/${id}/info`)
-  if (cached !== null) return cached
+  const lastAccessedAt = new Date().toISOString()
+  const cached = await getItem<{info: ModuleInfo; lastAccessedAt: string}>(`module/${id}/info`)
+  if (cached !== null) {
+    branchOff(async () => {
+      await setItem(`module/${id}/info`, {...cached, lastAccessedAt})
+    })
+    return cached.info
+  }
   const info = await _proxiedModuleInfoFetcher(id)
   branchOff(async () => {
-    await setItem(`module/${id}/info`, info)
+    await setItem(`module/${id}/info`, {info, lastAccessedAt})
   })
   return info
 }
