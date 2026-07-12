@@ -1,19 +1,9 @@
-import {useSuspenseQuery} from "@tanstack/react-query"
 import {createFileRoute} from "@tanstack/react-router"
 
-import {getModuleInfo} from "#lib/module-info"
+import PlayerControls from "#components/player-controls.tsx"
 
 function RouteComponent() {
-  const moduleID = 113391
-  const moduleInfo = useSuspenseQuery({
-    queryKey: ["module-info", moduleID],
-    queryFn: async () => await getModuleInfo(moduleID),
-  })
-  return (
-    <pre>
-      <code>{JSON.stringify(moduleInfo.data, null, 2)}</code>
-    </pre>
-  )
+  return <PlayerControls />
 }
 
 export const Route = createFileRoute("/")({component: RouteComponent})
