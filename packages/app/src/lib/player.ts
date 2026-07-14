@@ -14,18 +14,17 @@ export async function loadCurrentSong(): Promise<Result<void, Error>> {
   if (id === undefined) {
     return err(new Error("the play queue is empty"))
   }
-  try {
-    const module = await getModule(id)
-    const res = await renderModuleToWav(module)
-    if (res.isErr()) {
-      return err(res.error)
-    }
-    const wav = new Blob([res.value], {type: "audio/wav"})
-    player.srcObject = wav
-    return ok()
-  } catch (error) {
-    return err(error instanceof Error ? error : new Error(String(error)))
+  const module = await getModule(id)
+  if (module.isErr()) {
+    return err(module.error)
   }
+  const res = await renderModuleToWav(module.value)
+  if (res.isErr()) {
+    return err(res.error)
+  }
+  const wav = new Blob([res.value], {type: "audio/wav"})
+  player.srcObject = wav
+  return ok()
 }
 
 export async function skipSong(delta: number) {
