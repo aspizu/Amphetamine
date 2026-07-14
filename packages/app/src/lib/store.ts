@@ -12,22 +12,28 @@ interface State {
   queue: number[]
   queueHead: number
   repeatHead: number
-  playing: boolean
 }
 
-interface Actions {}
+export type Store = State
 
-export const useStore = create<State & Actions>()(
+export const useStore = create<Store>()(
   persist(
-    immer((set) => ({
-      queue: [],
+    immer(() => ({
+      queue: [60693],
       queueHead: 0,
       repeatHead: 0,
-      playing: false,
     })),
     {
       name: "app",
       storage: createJSONStorage(() => _storage),
+      version: 1,
+      migrate: (persistedState, version) => {
+        const state = persistedState as Store
+        if (version === 0 && state.queue.length === 0) {
+          return {...state, queue: [60693], queueHead: 0}
+        }
+        return state
+      },
     },
   ),
 )
