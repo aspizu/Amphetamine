@@ -67,12 +67,12 @@ export async function getModuleInfo(id: number): Promise<ModuleInfo> {
   if (cached !== null) {
     branchOff(async () => {
       await setItem(`module/${id}/info`, {...cached, lastAccessedAt})
-    })
+    }, "update cache time for module info cache")
     return cached.info
   }
   const info = await _proxiedModuleInfoFetcher(id)
   branchOff(async () => {
     await setItem(`module/${id}/info`, {info, lastAccessedAt})
-  })
+  }, "set cache data for module info cache")
   return info
 }

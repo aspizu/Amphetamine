@@ -1,29 +1,37 @@
-let _tasks: {promise: Promise<unknown>; settled: boolean}[] = []
+const tasks = new Set<Promise<unknown>>()
 
-function _gc() {
-  _tasks = _tasks.filter((task) => !task.settled)
+function formatError(error: unknown): any {
+  if (error instanceof AggregateError)
+    return [error.stack, ...error.errors.map(formatError)].join("\nCaused by: ")
+
+  if (error instanceof Error)
+    return error.cause
+      ? `${error.stack ?? error.message}\nCaused by: ${formatError(error.cause)}`
+      : (error.stack ?? error.message)
+
+  if (typeof error === "object")
+    try {
+      return JSON.stringify(error, null, 2)
+    } catch {}
+
+  return error
 }
 
-let _timeout: ReturnType<typeof setTimeout> | null = null
+export function branchOff(task: () => Promise<unknown>, message = "task failed") {
+  const promise = Promise.resolve().then(task)
+  tasks.add(promise)
 
-export function branchOff(task: () => Promise<unknown>) {
-  let t = {promise: task(), settled: false}
-  t.promise
-    .catch((e) => {
-      console.error(e instanceof Error ? e.stack : e)
+  void promise
+    .catch((error) => {
+      console.groupCollapsed(`[background] ${message}`)
+      console.error(formatError(error))
+      console.groupEnd()
     })
-    .finally(() => {
-      t.settled = true
-      if (_timeout) {
-        clearTimeout(_timeout)
-      }
-      _timeout = setTimeout(_gc, 1000)
-    })
-  _tasks.push(t)
+    .finally(() => tasks.delete(promise))
 }
 
 window.addEventListener("beforeunload", (event) => {
-  if (_tasks.some((task) => !task.settled)) {
+  if (tasks.size) {
     event.preventDefault()
   }
 })

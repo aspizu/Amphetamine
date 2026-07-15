@@ -27,7 +27,7 @@ export default function PlayerControls() {
               await player.loadSong()
               await player.play()
             }
-          })
+          }, "skip back btn")
         }
       >
         <SkipBackIcon />
@@ -37,7 +37,7 @@ export default function PlayerControls() {
         onClick={() =>
           branchOff(async () => {
             await player.play()
-          })
+          }, "play btn")
         }
       >
         <PlayIcon />
@@ -56,7 +56,7 @@ export default function PlayerControls() {
               await player.loadSong()
               await player.play()
             }
-          })
+          }, "skip fwd btn")
         }
       >
         <SkipForwardIcon />

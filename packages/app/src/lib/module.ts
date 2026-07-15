@@ -44,7 +44,7 @@ export async function getModule(id: number): Promise<Result<Uint8Array<ArrayBuff
       if (_looksLikeModule(bytes)) {
         branchOff(async () => {
           await setItem(`module/${id}/blob`, {lastAccessedAt: lastAccessedAt.toISOString()})
-        })
+        }, "update time for module blob cache")
         return ok(bytes)
       }
       // Cached module is corrupt, so fall through and refresh it.
@@ -66,7 +66,7 @@ export async function getModule(id: number): Promise<Result<Uint8Array<ArrayBuff
   branchOff(async () => {
     await putBlob(`module/${id}/blob`, moduleBytes.value)
     await setItem(`module/${id}/blob-info`, {lastAccessedAt: lastAccessedAt.toISOString()})
-  })
+  }, "store module blob in cache")
   return ok(moduleBytes.value)
 }
 

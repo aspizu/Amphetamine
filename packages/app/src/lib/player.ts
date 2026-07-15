@@ -1,8 +1,10 @@
 import {err, ok, type Result} from "neverthrow"
 
+import {commands} from "../commands.gen"
 import {branchOff} from "./background"
 import {renderModuleToWav} from "./libopenmpt"
 import {getModule} from "./module"
+import {getModuleInfo} from "./module-info"
 import {RepeatMode, useStore} from "./store"
 
 const _audio = new Audio()
@@ -25,6 +27,7 @@ export async function loadSong(): Promise<Result<boolean, Error>> {
 }
 
 export function play() {
+  branchOff(_pushDiscordActivity, "_pushDiscordActivity from play()")
   return _audio.play()
 }
 
@@ -35,6 +38,7 @@ export function pause() {
 export function stop() {
   _audio.pause()
   _audio.currentTime = 0
+  branchOff(_pushDiscordActivity, "_pushDiscordActivity from stop()")
 }
 
 export function isPaused() {
@@ -97,3 +101,25 @@ _audio.addEventListener("ended", () =>
     }
   }),
 )
+
+async function _pushDiscordActivity() {
+  if (isEnded()) {
+    await commands.clearActivity()
+    return
+  }
+  const state = useStore.getState()
+  if (state.queue.length < 1) return
+  const moduleInfo = await getModuleInfo(state.queue[state.queueHead])
+  await commands.setActivity({
+    activityType: "listening",
+    name: "Amphetamine",
+    details: moduleInfo.title,
+    state: moduleInfo.artists.map((a) => a.name).join(", "),
+    buttons: [
+      {
+        label: "View at modarchive.org",
+        url: `https://modarchive.org/index.php?request=view_by_moduleid&query=${moduleInfo.id}`,
+      },
+    ],
+  })
+}
