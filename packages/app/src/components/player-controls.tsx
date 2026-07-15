@@ -1,49 +1,85 @@
-import {PauseIcon, PlayIcon, SkipBackIcon, SkipForwardIcon, SquareIcon} from "lucide-react"
+import {
+  PauseIcon,
+  PlayIcon,
+  Repeat1Icon,
+  RepeatIcon,
+  RepeatOffIcon,
+  SkipBackIcon,
+  SkipForwardIcon,
+  SquareIcon,
+} from "lucide-react"
 
 import {branchOff} from "#lib/background"
-import {loadCurrentSong, player, skipSong} from "#lib/player"
+import * as player from "#lib/player"
+import {RepeatMode, useStore} from "#lib/store"
 
 import {Button} from "./ui/button"
 
-async function _onPlay() {
-  // already playing
-  if (!player.paused && !player.ended) {
-    return
-  }
-  // not playing anything, load current song
-  if (player.srcObject === null) {
-    const res = await loadCurrentSong()
-    if (res.isErr()) {
-      console.error(res.error)
-      return
-    }
-  }
-  await player.play()
-}
-
 export default function PlayerControls() {
+  const repeatMode = useStore((state) => state.repeatMode)
   return (
     <div>
-      <Button size="icon" onClick={() => branchOff(() => skipSong(-1))}>
+      <Button
+        size="icon"
+        onClick={() =>
+          branchOff(async () => {
+            if (player.skipBack()) {
+              await player.loadSong()
+              await player.play()
+            }
+          })
+        }
+      >
         <SkipBackIcon />
       </Button>
-      <Button size="icon" onClick={() => branchOff(_onPlay)}>
+      <Button
+        size="icon"
+        onClick={() =>
+          branchOff(async () => {
+            await player.play()
+          })
+        }
+      >
         <PlayIcon />
       </Button>
       <Button size="icon" onClick={() => player.pause()}>
         <PauseIcon />
       </Button>
+      <Button size="icon" onClick={() => player.stop()}>
+        <SquareIcon />
+      </Button>
+      <Button
+        size="icon"
+        onClick={() =>
+          branchOff(async () => {
+            if (player.skipForward()) {
+              await player.loadSong()
+              await player.play()
+            }
+          })
+        }
+      >
+        <SkipForwardIcon />
+      </Button>
       <Button
         size="icon"
         onClick={() => {
-          player.pause()
-          player.currentTime = 0
+          useStore.setState((draft) => {
+            draft.repeatMode = {
+              [RepeatMode.OFF]: RepeatMode.ALL,
+              [RepeatMode.ALL]: RepeatMode.ONE,
+              [RepeatMode.ONE]: RepeatMode.OFF,
+            }[draft.repeatMode]
+          })
         }}
       >
-        <SquareIcon />
-      </Button>
-      <Button size="icon" onClick={() => branchOff(() => skipSong(1))}>
-        <SkipForwardIcon />
+        {repeatMode === RepeatMode.OFF ? (
+          <RepeatOffIcon />
+        ) : repeatMode === RepeatMode.ALL ? (
+          <RepeatIcon />
+        ) : repeatMode === RepeatMode.ONE ? (
+          <Repeat1Icon />
+        ) : null}
       </Button>
     </div>
   )
