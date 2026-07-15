@@ -1,7 +1,4 @@
-export interface ChartItem {
-  name: string
-  downloadUrl: string
-}
+export type MusicChart = "tophits" | "topscore" | "favourites"
 
 export interface ChartPage {
   page: number
@@ -9,9 +6,15 @@ export interface ChartPage {
   entries: number[]
 }
 
-export const getMostDownloaded = async (page = 1): Promise<ChartPage> => {
+export const getMusicCharts = async (type: MusicChart, page = 1): Promise<ChartPage> => {
+  const chartPaths = {
+    tophits: "request=view_chart&query=tophits",
+    topscore: "request=view_chart&query=topscore",
+    favourites: "request=view_top_favourites",
+  } as const satisfies Record<MusicChart, string>
+
   const res = await fetch(
-    `https://proxy.aspiz.uk/https://modarchive.org/index.php?request=view_chart&query=tophits&page=${page}&cors-origin=${location.origin}`,
+    `https://proxy.aspiz.uk/https://modarchive.org/index.php?${chartPaths[type]}&page=${page}&cors-origin=${location.origin}`,
   )
 
   if (!res.ok) {
