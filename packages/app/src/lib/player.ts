@@ -126,3 +126,18 @@ async function _pushDiscordActivity() {
     ],
   })
 }
+
+export function getTime() {
+  return _audio.currentTime
+}
+
+export function getDuration() {
+  if (isNaN(_audio.duration)) {
+    return 0
+  }
+  return _audio.duration
+}
+
+export function setTime(time: number) {
+  _audio.currentTime = time
+}
