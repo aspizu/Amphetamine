@@ -24,7 +24,10 @@ export default function PlayerControls() {
         onClick={() =>
           branchOff(async () => {
             if (player.skipBack()) {
-              await player.loadSong()
+              const res = await player.loadSong()
+              if (res.isErr()) {
+                console.error(res.error)
+              }
               await player.play()
             }
           }, "skip back btn")
@@ -36,6 +39,12 @@ export default function PlayerControls() {
         size="icon"
         onClick={() =>
           branchOff(async () => {
+            if (!player.isLoaded()) {
+              const res = await player.loadSong()
+              if (res.isErr()) {
+                console.error(res.error)
+              }
+            }
             await player.play()
           }, "play btn")
         }
@@ -53,7 +62,10 @@ export default function PlayerControls() {
         onClick={() =>
           branchOff(async () => {
             if (player.skipForward()) {
-              await player.loadSong()
+              const res = await player.loadSong()
+              if (res.isErr()) {
+                console.error(res.error)
+              }
               await player.play()
             }
           }, "skip fwd btn")

@@ -26,13 +26,14 @@ export async function loadSong(): Promise<Result<boolean, Error>> {
   return ok(true)
 }
 
-export function play() {
+export async function play() {
+  await _audio.play()
   branchOff(_pushDiscordActivity, "_pushDiscordActivity from play()")
-  return _audio.play()
 }
 
 export function pause() {
   _audio.pause()
+  branchOff(_pushDiscordActivity, "_pushDiscordActivity from pause()")
 }
 
 export function stop() {
@@ -98,12 +99,14 @@ _audio.addEventListener("ended", () =>
     if (skipForward()) {
       await loadSong()
       await play()
+    } else {
+      await _pushDiscordActivity()
     }
   }),
 )
 
 async function _pushDiscordActivity() {
-  if (isEnded()) {
+  if (isPaused() || isEnded()) {
     await commands.clearActivity()
     return
   }

@@ -23,7 +23,7 @@ export function branchOff(task: () => Promise<unknown>, message = "task failed")
 
   void promise
     .catch((error) => {
-      console.groupCollapsed(`[background] ${message}`)
+      console.group(`[background] ${message}`)
       console.error(formatError(error))
       console.groupEnd()
     })
