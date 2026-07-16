@@ -18,7 +18,7 @@ crate-type = ["rlib"]
 tauri-build = { version = "2.6.3", features = [] }
 
 [dependencies]
-discord-presence = { version = "2.1.1", features = ["unstable_name"] }
+discord-presence = "2.1.1"
 log = "0.4"
 serde = { version = "1", features = ["derive"] }
 specta = { version = "=2.0.0-rc.25", features = ["derive"] }

@@ -115,7 +115,6 @@ async function _pushDiscordActivity() {
   const moduleInfo = await getModuleInfo(state.queue[state.queueHead])
   await commands.setActivity({
     activityType: "listening",
-    name: "Amphetamine",
     details: moduleInfo.title,
     state: moduleInfo.artists.map((a) => a.name).join(", "),
     buttons: [
@@ -140,4 +139,8 @@ export function getDuration() {
 
 export function setTime(time: number) {
   _audio.currentTime = time
+}
+
+export function setVolume(volume: number) {
+  _audio.volume = volume / 100
 }
