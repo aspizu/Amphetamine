@@ -21,14 +21,15 @@ export default function PlayerProgress() {
     }
   }, [isSliderDragging])
   useEffect(() => {
-    const interval = setInterval(update, 1000)
+    const interval = setInterval(update, 500)
     return () => {
       clearInterval(interval)
     }
   }, [update])
   return (
     <div>
-      {time.toFixed(1)} / {duration.toFixed(1)}
+      {(time / 60).toFixed(0)}:{(time % 60).toFixed(0)}/{(duration / 60).toFixed(0)}:
+      {(duration % 60).toFixed(0)}
       <Slider
         value={duration === 0 ? 0 : (sliderTime / duration) * 100}
         min={0}
