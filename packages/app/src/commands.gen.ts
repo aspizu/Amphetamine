@@ -10,7 +10,6 @@ export const commands = {
 
 /* Types */
 export type Activity = {
-	name?: string | null,
 	state?: string | null,
 	details?: string | null,
 	instance?: boolean | null,

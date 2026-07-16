@@ -113,13 +113,20 @@ async function _pushDiscordActivity() {
   const state = useStore.getState()
   if (state.queue.length < 1) return
   const moduleInfo = await getModuleInfo(state.queue[state.queueHead])
+  const title = moduleInfo.title.trim() || moduleInfo.filename.trim() || "Unknown"
+  const now = Date.now() / 1000
+  const start = now - _audio.currentTime
   await commands.setActivity({
     activityType: "listening",
-    details: moduleInfo.title,
-    state: moduleInfo.artists.map((a) => a.name).join(", "),
+    details: title,
+    state: moduleInfo.artists.map((a) => a.name.trim()).join(", ") || undefined,
+    timestamps: {
+      start: Math.floor(start),
+      end: Math.ceil(start + _audio.duration),
+    },
     buttons: [
       {
-        label: "View at modarchive.org",
+        label: "View",
         url: `https://modarchive.org/index.php?request=view_by_moduleid&query=${moduleInfo.id}`,
       },
     ],
@@ -142,5 +149,5 @@ export function setTime(time: number) {
 }
 
 export function setVolume(volume: number) {
-  _audio.volume = volume / 100
+  _audio.volume = (volume / 100) ** 2
 }
