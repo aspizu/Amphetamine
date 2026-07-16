@@ -18,6 +18,10 @@
   "scripts": {
     "build": "pnpm run build:wasm",
     "build:wasm": "bash scripts/build-libopenmpt-wasm.sh",
+    "check": "tsgo -p tsconfig.json --noEmit",
     "clean": "rm -rf dist ../../openmpt/bin ../../openmpt/build/obj"
+  },
+  "devDependencies": {
+    "@typescript/native-preview": "7.0.0-dev.20260510.1"
   }
 }
