@@ -19,6 +19,8 @@ interface State {
   queueHead: number
   repeatHead: number
   repeatMode: RepeatMode
+  volume: number
+  balance: number
 }
 
 export type Store = State
@@ -30,6 +32,8 @@ export const useStore = create<Store>()(
       queueHead: 0,
       repeatHead: 0,
       repeatMode: RepeatMode.OFF,
+      volume: 1,
+      balance: 0,
     })),
     {
       name: "app",

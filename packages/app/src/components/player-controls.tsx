@@ -26,7 +26,8 @@ export default function PlayerControls() {
             if (player.skipBack()) {
               const res = await player.loadSong()
               if (res.isErr()) {
-                console.error(res.error)
+                console.error("Failed to load song", res.error)
+                return
               }
               await player.play()
             }
@@ -42,7 +43,8 @@ export default function PlayerControls() {
             if (!player.isLoaded()) {
               const res = await player.loadSong()
               if (res.isErr()) {
-                console.error(res.error)
+                console.error("Failed to load song", res.error)
+                return
               }
             }
             await player.play()
@@ -64,7 +66,8 @@ export default function PlayerControls() {
             if (player.skipForward()) {
               const res = await player.loadSong()
               if (res.isErr()) {
-                console.error(res.error)
+                console.error("Failed to load song", res.error)
+                return
               }
               await player.play()
             }

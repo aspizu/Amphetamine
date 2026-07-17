@@ -40,7 +40,7 @@ function _toError(error: unknown): Error {
   return error instanceof Error ? error : new Error(String(error))
 }
 
-export function renderModuleToWav(moduleBytes: Uint8Array): ResultAsync<Blob, Error> {
+export function renderModuleToWav(moduleBytes: Uint8Array): ResultAsync<ArrayBuffer, Error> {
   const job = ResultAsync.fromPromise(_queue, _toError).andThen(() =>
     _renderModuleToWavNow(moduleBytes),
   )
@@ -48,5 +48,5 @@ export function renderModuleToWav(moduleBytes: Uint8Array): ResultAsync<Blob, Er
     () => undefined,
     () => undefined,
   )
-  return job.map((value) => new Blob([value], {type: "audio/wav"}))
+  return job
 }
