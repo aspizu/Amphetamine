@@ -21,6 +21,7 @@ interface State {
   repeatMode: RepeatMode
   volume: number
   balance: number
+  docked: boolean
 }
 
 export type Store = State
@@ -34,6 +35,7 @@ export const useStore = create<Store>()(
       repeatMode: RepeatMode.OFF,
       volume: 1,
       balance: 0.25,
+      docked: false,
     })),
     {
       name: "app",
