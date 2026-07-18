@@ -3,8 +3,6 @@ import {useQuery} from "@tanstack/react-query"
 import {getModuleInfo} from "#lib/module-info"
 import {useStore} from "#lib/store"
 
-import {Spinner} from "./ui/spinner"
-
 export default function PlayerDetails() {
   const moduleID = useStore((state) =>
     state.queue.length > 0 ? state.queue[state.queueHead] : null,
@@ -19,10 +17,15 @@ export default function PlayerDetails() {
     },
   })
   return (
-    <div>
-      {moduleInfo.isLoading && <Spinner />}
-      {moduleInfo.data && <div>{moduleInfo.data.title}</div>}
-      {moduleInfo.data && <div>{moduleInfo.data.artists.map((a) => a.name).join(", ")}</div>}
+    <div className="flex min-h-9 flex-col">
+      {moduleInfo.data && (
+        <>
+          <div className="text-lg leading-none">{moduleInfo.data.title || "~"}</div>
+          <div className="text-sm leading-tight text-muted-foreground">
+            {moduleInfo.data.artists.map((a) => a.name).join(", ") || "~"}
+          </div>
+        </>
+      )}
     </div>
   )
 }

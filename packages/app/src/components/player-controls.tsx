@@ -18,7 +18,7 @@ import {Button} from "./ui/button"
 export default function PlayerControls() {
   const repeatMode = useStore((state) => state.repeatMode)
   return (
-    <div>
+    <div className="flex">
       <Button
         size="icon"
         onClick={() =>

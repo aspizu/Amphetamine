@@ -4,10 +4,10 @@ import Player from "#components/player.tsx"
 
 function RootComponent() {
   return (
-    <div>
+    <>
       <Outlet />
       <Player />
-    </div>
+    </>
   )
 }
 

@@ -16,19 +16,63 @@ enum _State {
 const _context = new AudioContext()
 const _gain = _context.createGain()
 const _fade = _context.createGain()
-const _panner = _context.createStereoPanner()
+const _crossmix = _createStereoCrossmix(_context, _fade)
 const _fadeDuration = 0.25
 
 let _source: AudioBufferSourceNode | null = null
 let _fadingSource: AudioBufferSourceNode | null = null
 let _buffer: AudioBuffer | null = null
+const _preloadedWavs = new Map<number, Promise<Result<ArrayBuffer, Error>>>()
 let _state = _State.STOPPED
 let _startedAt = 0
 let _offset = 0
 
-_gain.connect(_fade).connect(_panner).connect(_context.destination)
+_gain.connect(_fade)
+_crossmix.output.connect(_context.destination)
 setVolume(useStore.getState().volume)
-setBalance(useStore.getState().balance)
+_crossmix.setMix(useStore.getState().balance)
+
+function _createStereoCrossmix(context: AudioContext, source: AudioNode, initialMix = 0.25) {
+  const splitter = context.createChannelSplitter(2)
+  const merger = context.createChannelMerger(2)
+
+  const leftToLeft = context.createGain()
+  const rightToLeft = context.createGain()
+  const leftToRight = context.createGain()
+  const rightToRight = context.createGain()
+
+  source.connect(splitter)
+
+  splitter.connect(leftToLeft, 0)
+  splitter.connect(leftToRight, 0)
+  splitter.connect(rightToLeft, 1)
+  splitter.connect(rightToRight, 1)
+
+  leftToLeft.connect(merger, 0, 0)
+  rightToLeft.connect(merger, 0, 0)
+  leftToRight.connect(merger, 0, 1)
+  rightToRight.connect(merger, 0, 1)
+
+  function _setMix(mix: number, smoothing = 0.02) {
+    mix = Math.max(0, Math.min(0.5, mix))
+
+    const direct = 1 - mix
+    const now = context.currentTime
+
+    leftToLeft.gain.setTargetAtTime(direct, now, smoothing)
+    rightToRight.gain.setTargetAtTime(direct, now, smoothing)
+
+    rightToLeft.gain.setTargetAtTime(mix, now, smoothing)
+    leftToRight.gain.setTargetAtTime(mix, now, smoothing)
+  }
+
+  _setMix(initialMix)
+
+  return {
+    output: merger,
+    setMix: _setMix,
+  }
+}
 
 function _toError(value: unknown) {
   return value instanceof Error ? value : new Error(String(value))
@@ -81,14 +125,44 @@ function _startSource() {
   return true
 }
 
+async function _renderSong(moduleId: number): Promise<Result<ArrayBuffer, Error>> {
+  try {
+    const module = await getModule(moduleId)
+    if (module.isErr()) return err(module.error)
+    return await renderModuleToWav(module.value)
+  } catch (error) {
+    return err(_toError(error))
+  }
+}
+
+function _takeWav(moduleId: number): Promise<Result<ArrayBuffer, Error>> {
+  const wav = _preloadedWavs.get(moduleId)
+  if (wav) {
+    _preloadedWavs.delete(moduleId)
+    return wav
+  }
+
+  return _renderSong(moduleId)
+}
+
+function _preloadNextSong() {
+  const store = useStore.getState()
+  let next = store.queueHead + 1
+  if (next >= store.queue.length) {
+    if (store.repeatMode !== RepeatMode.ALL) return
+    next = store.repeatHead
+  }
+
+  const moduleId = store.queue[next]
+  if (_preloadedWavs.has(moduleId)) return
+  _preloadedWavs.set(moduleId, _renderSong(moduleId))
+}
+
 export async function loadSong(): Promise<Result<boolean, Error>> {
   const store = useStore.getState()
   if (store.queue.length < 1) return ok(false)
 
-  const module = await getModule(store.queue[store.queueHead])
-  if (module.isErr()) return err(module.error)
-
-  const wav = await renderModuleToWav(module.value)
+  const wav = await _takeWav(store.queue[store.queueHead])
   if (wav.isErr()) return err(wav.error)
 
   try {
@@ -101,6 +175,7 @@ export async function loadSong(): Promise<Result<boolean, Error>> {
     _buffer = buffer
     _offset = 0
     _state = _State.STOPPED
+    _preloadNextSong()
     return ok(true)
   } catch (error) {
     return err(_toError(error))
@@ -255,6 +330,4 @@ export function setVolume(volume: number) {
   _gain.gain.value = normalized ** 2
 }
 
-export function setBalance(balance: number) {
-  _panner.pan.value = Math.max(-1, Math.min(balance, 1))
-}
+export const setMix = _crossmix.setMix

@@ -33,17 +33,18 @@ export const useStore = create<Store>()(
       repeatHead: 0,
       repeatMode: RepeatMode.OFF,
       volume: 1,
-      balance: 0,
+      balance: 0.25,
     })),
     {
       name: "app",
       storage: createJSONStorage(() => _storage),
-      version: 1,
+      version: 2,
       migrate: (persistedState, version) => {
-        const state = persistedState as Store
+        let state = persistedState as Store
         if (version === 0 && state.queue.length === 0) {
-          return {...state, queue: [60693], queueHead: 0}
+          state = {...state, queue: [60693], queueHead: 0}
         }
+        if (version < 2) state = {...state, balance: 0.25}
         return state
       },
     },

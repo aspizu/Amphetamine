@@ -5,6 +5,16 @@ import {useStore} from "#lib/store"
 
 import {Slider} from "./ui/slider"
 
+function formatTime(seconds: number): string {
+  const totalSeconds = Math.max(0, Math.floor(seconds))
+  const hours = Math.floor(totalSeconds / 3600)
+  const minutes = Math.floor((totalSeconds % 3600) / 60)
+  const secondsLeft = totalSeconds % 60
+  const mm = minutes.toString().padStart(hours > 0 ? 2 : 1, "0")
+  const ss = secondsLeft.toString().padStart(2, "0")
+  return hours > 0 ? `${hours}:${mm}:${ss}` : `${mm}:${ss}`
+}
+
 export default function PlayerProgress() {
   const moduleID = useStore((state) =>
     state.queue.length > 0 ? state.queue[state.queueHead] : null,
@@ -27,9 +37,8 @@ export default function PlayerProgress() {
     }
   }, [update])
   return (
-    <div>
-      {(time / 60).toFixed(0)}:{(time % 60).toFixed(0)}/{(duration / 60).toFixed(0)}:
-      {(duration % 60).toFixed(0)}
+    <div className="flex items-center gap-1 text-sm text-muted-foreground">
+      <div className="w-10">{formatTime(time)}</div>
       <Slider
         value={duration === 0 ? 0 : (sliderTime / duration) * 100}
         min={0}
@@ -49,6 +58,7 @@ export default function PlayerProgress() {
           }
         }}
       />
+      <div className="w-10">{formatTime(duration)}</div>
     </div>
   )
 }
