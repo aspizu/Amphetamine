@@ -162,11 +162,15 @@ export async function loadSong(): Promise<Result<boolean, Error>> {
   const store = useStore.getState()
   if (store.queue.length < 1) return ok(false)
 
-  const wav = await _takeWav(store.queue[store.queueHead])
+  const moduleId = store.queue[store.queueHead]
+  const wav = await _takeWav(moduleId)
   if (wav.isErr()) return err(wav.error)
 
   try {
     const buffer = await _context.decodeAudioData(wav.value)
+    const latest = useStore.getState()
+    if (latest.queue[latest.queueHead] !== moduleId) return ok(false)
+
     _stopSource()
     if (_fadingSource) {
       _stopSource(_fadingSource)

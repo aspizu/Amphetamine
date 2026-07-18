@@ -29,7 +29,7 @@ export default function PlayerControls() {
                 console.error("Failed to load song", res.error)
                 return
               }
-              await player.play()
+              if (res.value) await player.play()
             }
           }, "skip back btn")
         }
@@ -46,6 +46,7 @@ export default function PlayerControls() {
                 console.error("Failed to load song", res.error)
                 return
               }
+              if (!res.value) return
             }
             await player.play()
           }, "play btn")
@@ -69,7 +70,7 @@ export default function PlayerControls() {
                 console.error("Failed to load song", res.error)
                 return
               }
-              await player.play()
+              if (res.value) await player.play()
             }
           }, "skip fwd btn")
         }
