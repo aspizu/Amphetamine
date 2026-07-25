@@ -1,5 +1,5 @@
 import {Menu as MenuPrimitive} from "@base-ui/react/menu"
-import {ChevronRightIcon, CheckIcon} from "lucide-react"
+import {CaretRightIcon, CheckIcon} from "@phosphor-icons/react"
 import * as React from "react"
 
 import {cn} from "#lib/utils"
@@ -117,7 +117,7 @@ function DropdownMenuSubTrigger({
       {...props}
     >
       {children}
-      <ChevronRightIcon className="ml-auto" />
+      <CaretRightIcon className="ml-auto" />
     </MenuPrimitive.SubmenuTrigger>
   )
 }
@@ -239,18 +239,18 @@ function DropdownMenuShortcut({className, ...props}: React.ComponentProps<"span"
 
 export {
   DropdownMenu,
-  DropdownMenuPortal,
-  DropdownMenuTrigger,
+  DropdownMenuCheckboxItem,
   DropdownMenuContent,
   DropdownMenuGroup,
-  DropdownMenuLabel,
   DropdownMenuItem,
-  DropdownMenuCheckboxItem,
+  DropdownMenuLabel,
+  DropdownMenuPortal,
   DropdownMenuRadioGroup,
   DropdownMenuRadioItem,
   DropdownMenuSeparator,
   DropdownMenuShortcut,
   DropdownMenuSub,
-  DropdownMenuSubTrigger,
   DropdownMenuSubContent,
+  DropdownMenuSubTrigger,
+  DropdownMenuTrigger,
 }
