@@ -5,7 +5,7 @@ import PlayerVolume from "./player-volume"
 
 export default function Player() {
   return (
-    <div className="mt-auto flex h-[110px] w-[420px] flex-col justify-center self-center p-2">
+    <div className="mt-auto flex w-full max-w-md flex-col justify-center self-center p-2">
       <PlayerDetails />
       <PlayerProgress />
       <div className="flex items-center justify-center gap-2">
