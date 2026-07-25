@@ -21,7 +21,6 @@ interface State {
   repeatMode: RepeatMode
   volume: number
   balance: number
-  docked: boolean
 }
 
 export type Store = State
@@ -35,20 +34,11 @@ export const useStore = create<Store>()(
       repeatMode: RepeatMode.OFF,
       volume: 1,
       balance: 0.25,
-      docked: false,
     })),
     {
       name: "app",
       storage: createJSONStorage(() => _storage),
-      version: 2,
-      migrate: (persistedState, version) => {
-        let state = persistedState as Store
-        if (version === 0 && state.queue.length === 0) {
-          state = {...state, queue: [60693], queueHead: 0}
-        }
-        if (version < 2) state = {...state, balance: 0.25}
-        return state
-      },
+      version: 1,
     },
   ),
 )

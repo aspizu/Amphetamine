@@ -1,9 +1,11 @@
+import {IconContext} from "@phosphor-icons/react"
 import {QueryClient, QueryClientProvider} from "@tanstack/react-query"
 import {createRouter, RouterProvider} from "@tanstack/react-router"
 import {StrictMode} from "react"
-import {createRoot} from "react-dom/client"
 
 import "#styles/global.css"
+
+import {createRoot} from "react-dom/client"
 
 import {routeTree} from "./routeTree.gen"
 
@@ -23,7 +25,9 @@ const router = createRouter({
 createRoot(document.getElementById("root")!).render(
   <StrictMode>
     <QueryClientProvider client={queryClient}>
-      <RouterProvider router={router} />
+      <IconContext.Provider value={{weight: "fill"}}>
+        <RouterProvider router={router} />
+      </IconContext.Provider>
     </QueryClientProvider>
   </StrictMode>,
 )

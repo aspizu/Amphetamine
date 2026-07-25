@@ -1,13 +1,12 @@
 import {
   PauseIcon,
   PlayIcon,
-  Repeat1Icon,
   RepeatIcon,
-  RepeatOffIcon,
+  RepeatOnceIcon,
   SkipBackIcon,
   SkipForwardIcon,
   SquareIcon,
-} from "lucide-react"
+} from "@phosphor-icons/react"
 
 import {branchOff} from "#lib/background"
 import * as player from "#lib/player"
@@ -90,11 +89,11 @@ export default function PlayerControls() {
         }}
       >
         {repeatMode === RepeatMode.OFF ? (
-          <RepeatOffIcon />
+          <RepeatIcon />
         ) : repeatMode === RepeatMode.ALL ? (
           <RepeatIcon />
         ) : repeatMode === RepeatMode.ONE ? (
-          <Repeat1Icon />
+          <RepeatOnceIcon />
         ) : null}
       </Button>
     </div>
