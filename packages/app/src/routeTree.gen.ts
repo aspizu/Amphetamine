@@ -10,33 +10,53 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as PlaylistsPlaylistIndexRouteImport } from './routes/playlists.$playlistIndex'
+import { Route as ChartsChartRouteImport } from './routes/charts.$chart'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const PlaylistsPlaylistIndexRoute = PlaylistsPlaylistIndexRouteImport.update({
+  id: '/playlists/$playlistIndex',
+  path: '/playlists/$playlistIndex',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ChartsChartRoute = ChartsChartRouteImport.update({
+  id: '/charts/$chart',
+  path: '/charts/$chart',
+  getParentRoute: () => rootRouteImport,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/charts/$chart': typeof ChartsChartRoute
+  '/playlists/$playlistIndex': typeof PlaylistsPlaylistIndexRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/charts/$chart': typeof ChartsChartRoute
+  '/playlists/$playlistIndex': typeof PlaylistsPlaylistIndexRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
+  '/charts/$chart': typeof ChartsChartRoute
+  '/playlists/$playlistIndex': typeof PlaylistsPlaylistIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/'
+  fullPaths: '/' | '/charts/$chart' | '/playlists/$playlistIndex'
   fileRoutesByTo: FileRoutesByTo
-  to: '/'
-  id: '__root__' | '/'
+  to: '/' | '/charts/$chart' | '/playlists/$playlistIndex'
+  id: '__root__' | '/' | '/charts/$chart' | '/playlists/$playlistIndex'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  ChartsChartRoute: typeof ChartsChartRoute
+  PlaylistsPlaylistIndexRoute: typeof PlaylistsPlaylistIndexRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -48,11 +68,27 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/playlists/$playlistIndex': {
+      id: '/playlists/$playlistIndex'
+      path: '/playlists/$playlistIndex'
+      fullPath: '/playlists/$playlistIndex'
+      preLoaderRoute: typeof PlaylistsPlaylistIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/charts/$chart': {
+      id: '/charts/$chart'
+      path: '/charts/$chart'
+      fullPath: '/charts/$chart'
+      preLoaderRoute: typeof ChartsChartRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  ChartsChartRoute: ChartsChartRoute,
+  PlaylistsPlaylistIndexRoute: PlaylistsPlaylistIndexRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

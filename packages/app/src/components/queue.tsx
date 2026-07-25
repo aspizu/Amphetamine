@@ -1,21 +1,10 @@
-import {DotsThreeVerticalIcon, PlayIcon} from "@phosphor-icons/react"
-import {useSuspenseQuery} from "@tanstack/react-query"
-
 import {branchOff} from "#lib/background"
-import {getModuleInfo} from "#lib/module-info"
 import * as player from "#lib/player"
 import {useStore} from "#lib/store"
 
-import {Button} from "./ui/button"
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuGroup,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from "./ui/dropdown-menu"
+import ModuleList from "./module-list"
 
-function removeQueueItem(id: number) {
+function _removeQueueItem(id: number) {
   let send = false
   useStore.setState((draft) => {
     const index = draft.queue.indexOf(id)
@@ -40,7 +29,7 @@ function removeQueueItem(id: number) {
   }
 }
 
-function moveQueueItemUp(id: number) {
+function _moveQueueItemUp(id: number) {
   useStore.setState((draft) => {
     if (draft.queue.length === 1) return
     const index = draft.queue.indexOf(id)
@@ -55,7 +44,7 @@ function moveQueueItemUp(id: number) {
   })
 }
 
-function moveQueueItemDown(id: number) {
+function _moveQueueItemDown(id: number) {
   useStore.setState((draft) => {
     if (draft.queue.length === 1) return
     const index = draft.queue.indexOf(id)
@@ -70,82 +59,41 @@ function moveQueueItemDown(id: number) {
   })
 }
 
-function QueueItem({id}: {id: number}) {
-  const isActive = useStore((state) => state.queue[state.queueHead] === id)
-  const isHistory = useStore((state) => state.queue.indexOf(id) < state.queueHead)
-  const moduleInfo = useSuspenseQuery({
-    queryKey: ["module", id, "info"],
-    queryFn: async () => {
-      return await getModuleInfo(id)
-    },
+function _selectQueueItem(id: number) {
+  branchOff(async () => {
+    let send = false
+    useStore.setState((draft) => {
+      const newQueueHead = draft.queue.indexOf(id)
+      if (newQueueHead === draft.queueHead || newQueueHead === -1) return
+      draft.queueHead = newQueueHead
+      send = true
+    })
+    if (!send) return
+    const res = await player.loadSong()
+    if (res.isErr()) {
+      console.error("Failed to load song", res.error)
+      return
+    }
+    if (res.value) await player.play()
   })
-  return (
-    <div className="group flex items-center transition-colors hover:bg-card">
-      <button
-        type="button"
-        className="flex min-w-0 flex-1 items-center gap-2 text-left"
-        onClick={() =>
-          branchOff(async () => {
-            let send = false
-            useStore.setState((draft) => {
-              const newQueueHead = draft.queue.indexOf(id)
-              if (newQueueHead === draft.queueHead || newQueueHead === -1) {
-                return
-              }
-              draft.queueHead = newQueueHead
-              send = true
-            })
-            if (send) {
-              const res = await player.loadSong()
-              if (res.isErr()) {
-                console.error("Failed to load song", res.error)
-                return
-              }
-              if (res.value) {
-                await player.play()
-              }
-            }
-          })
-        }
-      >
-        {isActive ? (
-          <PlayIcon key="playing" className="ml-2 size-4" />
-        ) : (
-          <PlayIcon
-            key="not-playing"
-            className="ml-2 size-4 opacity-0 transition-opacity group-hover:opacity-75"
-          />
-        )}
-        <span className={isActive ? "font-medium" : isHistory ? "text-primary/80" : ""}>
-          {moduleInfo.data.title || "~"} -{" "}
-          {moduleInfo.data.artists.map((a) => a.name).join(", ") || "~"}
-        </span>
-      </button>
-      <DropdownMenu>
-        <DropdownMenuTrigger
-          render={<Button size="icon-sm" variant="ghost" className="mr-2" />}
-        >
-          <DotsThreeVerticalIcon weight="bold" />
-        </DropdownMenuTrigger>
-        <DropdownMenuContent>
-          <DropdownMenuGroup>
-            <DropdownMenuItem onClick={() => removeQueueItem(id)}>Remove</DropdownMenuItem>
-            <DropdownMenuItem onClick={() => moveQueueItemUp(id)}>Move up</DropdownMenuItem>
-            <DropdownMenuItem onClick={() => moveQueueItemDown(id)}>Move down</DropdownMenuItem>
-          </DropdownMenuGroup>
-        </DropdownMenuContent>
-      </DropdownMenu>
-    </div>
-  )
+}
+
+const _queueActions = {
+  remove: _removeQueueItem,
+  moveUp: _moveQueueItemUp,
+  moveDown: _moveQueueItemDown,
 }
 
 export default function Queue() {
   const queue = useStore((state) => state.queue)
+  const queueHead = useStore((state) => state.queueHead)
   return (
-    <div className="flex flex-col divide-y overflow-y-scroll p-2">
-      {queue.map((id) => (
-        <QueueItem key={id} id={id} />
-      ))}
-    </div>
+    <ModuleList
+      ids={queue}
+      activeId={queue[queueHead]}
+      historyIds={new Set(queue.slice(0, queueHead))}
+      onSelect={_selectQueueItem}
+      actions={_queueActions}
+    />
   )
 }
