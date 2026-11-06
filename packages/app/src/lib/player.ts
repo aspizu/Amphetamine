@@ -291,7 +291,8 @@ async function _pushDiscordActivity() {
   await commands.setActivity({
     activityType: "listening",
     details: title,
-    state: moduleInfo.artists.map((artist) => artist.name.trim()).join(", ") || undefined,
+    state:
+      moduleInfo.artists.map((artist) => artist.name.trim()).join(", ") || moduleInfo.filename,
     timestamps: {
       start: Math.floor(start),
       end: Math.ceil(start + getDuration()),

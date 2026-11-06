@@ -35,7 +35,7 @@ interface ModuleListProps {
 
 function _getModuleFullName(module: ModuleInfo) {
   const title = module.title || "~"
-  const artists = module.artists.map((artist) => artist.name).join(", ") || "~"
+  const artists = module.artists.map((artist) => artist.name).join(", ") || module.filename
   return `${title} - ${artists}`
 }
 
@@ -57,7 +57,12 @@ function _ModuleListItem({
     queryFn: async () => await getModuleInfo(id),
   })
   const name = (
-    <span className={cn("truncate", isActive && "font-medium", isHistory && "text-primary/80")}>
+    <span
+      className={cn(
+        "truncate",
+        isActive ? "font-medium text-primary" : isHistory && "text-muted-foreground",
+      )}
+    >
       {_getModuleFullName(moduleInfo.data)}
     </span>
   )
@@ -84,7 +89,13 @@ function _ModuleListItem({
       {actions && (actions.remove || actions.moveUp || actions.moveDown) && (
         <DropdownMenu>
           <DropdownMenuTrigger
-            render={<Button size="icon-sm" variant="ghost" className="mr-2" />}
+            render={
+              <Button
+                size="icon-sm"
+                variant="ghost"
+                className="opacity-0 group-hover:opacity-100 hover:bg-transparent focus-visible:opacity-100 aria-expanded:opacity-100 dark:hover:bg-transparent"
+              />
+            }
           >
             <DotsThreeVerticalIcon weight="bold" />
           </DropdownMenuTrigger>

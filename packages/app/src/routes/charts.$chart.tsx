@@ -3,6 +3,7 @@ import {createFileRoute} from "@tanstack/react-router"
 
 import ModuleList from "#components/module-list.tsx"
 import {playPlaylist} from "#lib/playlists"
+import {useStore} from "#lib/store"
 import {getMusicCharts, type MusicChart} from "#lib/top-charts"
 
 const _chartTypes = {
@@ -12,6 +13,7 @@ const _chartTypes = {
 } as const satisfies Record<string, MusicChart>
 
 function _ChartPage({type}: {type: MusicChart}) {
+  const activeId = useStore((state) => state.queue[state.queueHead])
   const page = useSuspenseQuery({
     queryKey: ["music-chart", type],
     queryFn: async () => await getMusicCharts(type),
@@ -20,6 +22,7 @@ function _ChartPage({type}: {type: MusicChart}) {
   return (
     <ModuleList
       ids={page.data.entries}
+      activeId={activeId}
       onSelect={(moduleId) => playPlaylist(page.data.entries, moduleId)}
     />
   )

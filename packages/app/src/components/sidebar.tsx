@@ -10,7 +10,7 @@ import {Link} from "@tanstack/react-router"
 import {useStore} from "#lib/store"
 
 const _linkClass =
-  "flex h-7 w-full min-w-0 items-center gap-2 px-2 text-left text-sm text-primary/80 transition-colors hover:bg-card"
+  "flex h-7 w-full min-w-0 items-center gap-2 px-2 text-left text-sm text-foreground/80 transition-colors hover:bg-card"
 const _activeLinkClass = "bg-card font-medium text-primary"
 
 export default function Sidebar() {

@@ -10,7 +10,9 @@ function RootComponent() {
         <Sidebar />
         <Outlet />
       </div>
-      <Player />
+      <div className="flex justify-center border-t">
+        <Player />
+      </div>
     </div>
   )
 }

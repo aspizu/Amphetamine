@@ -7,6 +7,7 @@ import {useStore} from "#lib/store"
 function _RouteComponent() {
   const {playlistIndex} = Route.useParams()
   const playlist = useStore((store) => store.playlists[Number(playlistIndex)])
+  const activeId = useStore((state) => state.queue[state.queueHead])
 
   if (!playlist) {
     return <div className="p-2 text-primary/80">Playlist not found.</div>
@@ -15,6 +16,7 @@ function _RouteComponent() {
   return (
     <ModuleList
       ids={playlist.pl}
+      activeId={activeId}
       onSelect={(moduleId) => playPlaylist(playlist.pl, moduleId)}
     />
   )
