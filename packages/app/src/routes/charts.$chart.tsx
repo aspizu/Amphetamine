@@ -1,16 +1,17 @@
 import {useSuspenseQuery} from "@tanstack/react-query"
 import {createFileRoute} from "@tanstack/react-router"
+import * as React from "react"
 
 import ModuleList from "#components/module-list.tsx"
 import {playPlaylist} from "#lib/playlists"
 import {useStore} from "#lib/store"
 import {getMusicCharts, type MusicChart} from "#lib/top-charts"
 
-const _chartTypes = {
-  favourites: "favourites",
-  "top-hits": "tophits",
-  "top-score": "topscore",
-} as const satisfies Record<string, MusicChart>
+const _chartTypes = new Map<string, MusicChart>([
+  ["favourites", "favourites"],
+  ["top-hits", "tophits"],
+  ["top-score", "topscore"],
+])
 
 function _ChartPage({type}: {type: MusicChart}) {
   const activeId = useStore((state) => state.queue[state.queueHead])
@@ -30,7 +31,7 @@ function _ChartPage({type}: {type: MusicChart}) {
 
 function _RouteComponent() {
   const {chart} = Route.useParams()
-  const chartType = _chartTypes[chart as keyof typeof _chartTypes]
+  const chartType = _chartTypes.get(chart)
 
   if (!chartType) {
     return <div className="p-2 text-primary/80">Chart not found.</div>

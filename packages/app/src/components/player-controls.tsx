@@ -7,12 +7,14 @@ import {
   SkipForwardIcon,
   SquareIcon,
 } from "@phosphor-icons/react"
+import * as React from "react"
 
 import {branchOff} from "#lib/background"
 import * as player from "#lib/player"
 import {RepeatMode, useStore} from "#lib/store"
 
 import {Button} from "./ui/button"
+import {Spinner} from "./ui/spinner"
 
 function _handleSkipBack() {
   branchOff(async () => {
@@ -22,13 +24,16 @@ function _handleSkipBack() {
         console.error("Failed to load song", res.error)
         return
       }
-      if (res.value) await player.play()
+      if (res.value) {
+        await player.play()
+      }
     }
   }, "skip back btn")
 }
 
 function _handlePlay() {
   branchOff(async () => {
+    if (player.usePlayerState.getState().loadingModuleId !== null) return
     if (!player.isLoaded()) {
       const res = await player.loadSong()
       if (res.isErr()) {
@@ -49,7 +54,9 @@ function _handleSkipForward() {
         console.error("Failed to load song", res.error)
         return
       }
-      if (res.value) await player.play()
+      if (res.value) {
+        await player.play()
+      }
     }
   }, "skip fwd btn")
 }
@@ -65,6 +72,7 @@ function _handleRepeat() {
 }
 
 export default function PlayerControls() {
+  const loading = player.usePlayerState((state) => state.loadingModuleId !== null)
   const repeatMode = useStore((state) => state.repeatMode)
   const RepeatModeIcon = {
     [RepeatMode.OFF]: RepeatIcon,
@@ -76,8 +84,16 @@ export default function PlayerControls() {
       <Button size="icon" onClick={_handleSkipBack} variant="ghost">
         <SkipBackIcon />
       </Button>
-      <Button size="icon" onClick={_handlePlay} variant="default">
-        <PlayIcon />
+      <Button
+        size="icon"
+        onClick={_handlePlay}
+        variant="default"
+        className="disabled:opacity-100"
+        disabled={loading}
+        aria-busy={loading}
+        aria-label={loading ? "Loading song" : "Play"}
+      >
+        {loading ? <Spinner aria-label="Loading song" /> : <PlayIcon />}
       </Button>
       <Button size="icon" onClick={player.pause} variant="ghost">
         <PauseIcon />

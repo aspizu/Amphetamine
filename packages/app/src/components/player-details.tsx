@@ -1,4 +1,5 @@
 import {useQuery} from "@tanstack/react-query"
+import * as React from "react"
 
 import {getModuleInfo} from "#lib/module-info"
 import {useStore} from "#lib/store"
@@ -22,7 +23,8 @@ export default function PlayerDetails() {
         <>
           <div className="text-lg leading-none">{moduleInfo.data.title || "~"}</div>
           <div className="text-sm leading-tight text-muted-foreground">
-            {moduleInfo.data.artists.map((a) => a.name).join(", ") || moduleInfo.data.filename}
+            {moduleInfo.data.artists.map((a) => a.name).join(", ") ||
+              moduleInfo.data.filename}
           </div>
         </>
       )}

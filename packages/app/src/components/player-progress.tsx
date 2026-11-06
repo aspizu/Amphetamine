@@ -1,3 +1,4 @@
+import * as React from "react"
 import {useCallback, useEffect, useState} from "react"
 
 import * as player from "#lib/player"
@@ -5,7 +6,7 @@ import {useStore} from "#lib/store"
 
 import {Slider} from "./ui/slider"
 
-function formatTime(seconds: number): string {
+function _formatTime(seconds: number): string {
   const totalSeconds = Math.max(0, Math.floor(seconds))
   const hours = Math.floor(totalSeconds / 3600)
   const minutes = Math.floor((totalSeconds % 3600) / 60)
@@ -38,7 +39,7 @@ export default function PlayerProgress() {
   }, [update])
   return (
     <div className="flex items-center gap-1 text-sm text-muted-foreground">
-      <div className="w-10">{formatTime(time)}</div>
+      <div className="w-10">{_formatTime(time)}</div>
       <Slider
         value={duration === 0 ? 0 : (sliderTime / duration) * 100}
         min={0}
@@ -58,7 +59,7 @@ export default function PlayerProgress() {
           }
         }}
       />
-      <div className="w-10">{formatTime(duration)}</div>
+      <div className="w-10">{_formatTime(duration)}</div>
     </div>
   )
 }

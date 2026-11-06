@@ -1,29 +1,14 @@
-import {
-  CaretDownIcon,
-  CaretUpIcon,
-  DotsThreeVerticalIcon,
-  PlayIcon,
-  TrashIcon,
-} from "@phosphor-icons/react"
+import {PlayIcon} from "@phosphor-icons/react"
 import {useSuspenseQuery} from "@tanstack/react-query"
+import * as React from "react"
 
-import {getModuleInfo, type ModuleInfo} from "#lib/module-info"
+import {getModuleInfo} from "#lib/module-info"
+import * as player from "#lib/player"
 import {cn} from "#lib/utils"
 
-import {Button} from "./ui/button"
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuGroup,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from "./ui/dropdown-menu"
-
-interface ModuleListActions {
-  remove?: (id: number) => void
-  moveUp?: (id: number) => void
-  moveDown?: (id: number) => void
-}
+import ModuleMenu from "./module-menu"
+import type {ModuleListActions} from "./module-menu"
+import {Spinner} from "./ui/spinner"
 
 interface ModuleListProps {
   ids: number[]
@@ -31,12 +16,6 @@ interface ModuleListProps {
   historyIds?: Set<number>
   onSelect?: (id: number) => void
   actions?: ModuleListActions
-}
-
-function _getModuleFullName(module: ModuleInfo) {
-  const title = module.title || "~"
-  const artists = module.artists.map((artist) => artist.name).join(", ") || module.filename
-  return `${title} - ${artists}`
 }
 
 function _ModuleListItem({
@@ -52,10 +31,16 @@ function _ModuleListItem({
   onSelect?: (id: number) => void
   actions?: ModuleListActions
 }) {
+  const loading = player.usePlayerState((state) => state.loadingModuleId === id)
   const moduleInfo = useSuspenseQuery({
     queryKey: ["module", id, "info"],
     queryFn: async () => await getModuleInfo(id),
   })
+  const title = moduleInfo.data.title || "~"
+  const artists =
+    moduleInfo.data.artists.map((artist) => artist.name).join(", ") ||
+    moduleInfo.data.filename
+  const fullName = `${title} - ${artists}`
   const name = (
     <span
       className={cn(
@@ -63,7 +48,7 @@ function _ModuleListItem({
         isActive ? "font-medium text-primary" : isHistory && "text-muted-foreground",
       )}
     >
-      {_getModuleFullName(moduleInfo.data)}
+      {fullName}
     </span>
   )
 
@@ -74,55 +59,25 @@ function _ModuleListItem({
           type="button"
           className="flex h-full min-w-0 flex-1 items-center gap-2 text-left"
           onClick={() => onSelect(id)}
+          disabled={loading}
+          aria-busy={loading}
         >
-          <PlayIcon
-            className={cn(
-              "ml-2 size-4",
-              !isActive && "opacity-0 transition-opacity group-hover:opacity-75",
-            )}
-          />
+          {loading ? (
+            <Spinner className="ml-2 size-4 shrink-0" aria-label="Loading song" />
+          ) : (
+            <PlayIcon
+              className={cn(
+                "ml-2 size-4 shrink-0",
+                !isActive && "opacity-0 transition-opacity group-hover:opacity-75",
+              )}
+            />
+          )}
           {name}
         </button>
       ) : (
         <div className="flex h-full min-w-0 flex-1 items-center px-2">{name}</div>
       )}
-      {actions && (actions.remove || actions.moveUp || actions.moveDown) && (
-        <DropdownMenu>
-          <DropdownMenuTrigger
-            render={
-              <Button
-                size="icon-sm"
-                variant="ghost"
-                className="opacity-0 group-hover:opacity-100 hover:bg-transparent focus-visible:opacity-100 aria-expanded:opacity-100 dark:hover:bg-transparent"
-              />
-            }
-          >
-            <DotsThreeVerticalIcon weight="bold" />
-          </DropdownMenuTrigger>
-          <DropdownMenuContent>
-            <DropdownMenuGroup>
-              {actions.remove && (
-                <DropdownMenuItem onClick={() => actions.remove?.(id)}>
-                  <TrashIcon />
-                  Remove
-                </DropdownMenuItem>
-              )}
-              {actions.moveUp && (
-                <DropdownMenuItem onClick={() => actions.moveUp?.(id)}>
-                  <CaretUpIcon />
-                  Move up
-                </DropdownMenuItem>
-              )}
-              {actions.moveDown && (
-                <DropdownMenuItem onClick={() => actions.moveDown?.(id)}>
-                  <CaretDownIcon />
-                  Move down
-                </DropdownMenuItem>
-              )}
-            </DropdownMenuGroup>
-          </DropdownMenuContent>
-        </DropdownMenu>
-      )}
+      <ModuleMenu id={id} name={fullName} actions={actions} />
     </div>
   )
 }

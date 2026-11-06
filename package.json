@@ -1,13 +1,15 @@
 {
+  "type": "module",
   "scripts": {
     "build": "pnpm --filter @amphetamine/libopenmpt build",
     "build:app": "pnpm --filter @amphetamine/app build",
     "build:wasm": "pnpm --filter @amphetamine/libopenmpt build:wasm",
     "clean": "pnpm --filter @amphetamine/libopenmpt clean",
     "dev": "pnpm --filter @amphetamine/app dev",
-    "fmt": "oxfmt",
-    "fmt:check": "oxfmt --check",
-    "lint": "oxlint",
+    "fmt": "oxfmt .",
+    "fmt:check": "oxfmt --check .",
+    "format": "oxfmt .",
+    "lint": "oxfmt --check . && oxlint . && tailwind-lint --config packages/app/src/styles/global.css \"packages/app/src/**/*.{html,js,jsx,md,mdx,svelte,ts,tsx,vue}\"",
     "prepare": "lefthook install",
     "test": "pnpm --filter @amphetamine/app test",
     "check": "pnpm --filter @amphetamine/app check",
@@ -15,10 +17,12 @@
     "tauri:dev": "pnpm --filter @amphetamine/app tauri:dev"
   },
   "devDependencies": {
-    "lefthook": "^2.1.9",
-    "oxfmt": "^0.56.0",
-    "oxlint": "^1.71.0",
-    "oxlint-tsgolint": "^0.23.0"
+    "lefthook": "^2.1.14",
+    "oxfmt": "^0.76.0",
+    "oxlint": "^1.85.0",
+    "oxlint-plugin-aspizuism": "^1.0.6",
+    "oxlint-tsgolint": "^7.0.2002",
+    "tailwind-lint": "^0.16.0"
   },
   "devEngines": {
     "packageManager": {

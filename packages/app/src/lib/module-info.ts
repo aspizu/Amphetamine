@@ -31,7 +31,9 @@ async function _proxiedModuleInfoFetcher(id: number): Promise<ModuleInfo> {
   const values = new Map<string, string>()
   for (const item of doc.querySelectorAll(".mod-page-archive-info li.stats")) {
     const match = item.textContent?.trim().match(/^([^:]+):\s*(.+)$/)
-    if (match) values.set(match[1].trim(), match[2].trim())
+    if (match) {
+      values.set(match[1].trim(), match[2].trim())
+    }
   }
   const format = values.get("Format")
   const channels = Number(values.get("Channels"))
@@ -39,15 +41,20 @@ async function _proxiedModuleInfoFetcher(id: number): Promise<ModuleInfo> {
     throw new Error(`module ${id} has no usable metadata on modarchive.org`)
   }
   const genre = values.get("Genre")
-  const summary = doc.querySelector(".mod-page-archive-info li.stats")?.textContent ?? ""
+  const summary =
+    doc.querySelector(".mod-page-archive-info li.stats")?.textContent ?? ""
   const addedAtText = summary.match(/\bsince\s+(.+?)(?:\s+:D)?\s*$/)?.[1]
-  const addedAt = addedAtText ? parse(addedAtText, "EEE do MMM yyyy", new Date(0)) : null
+  const addedAt = addedAtText
+    ? parse(addedAtText, "EEE do MMM yyyy", new Date(0))
+    : null
   return {
     id,
     title,
     filename,
     artists: Array.from(
-      doc.querySelectorAll<HTMLAnchorElement>('.mod-page-archive-info a[href^="member.php?"]'),
+      doc.querySelectorAll<HTMLAnchorElement>(
+        '.mod-page-archive-info a[href^="member.php?"]',
+      ),
     )
       .map((artist) => ({
         id: Number(artist.getAttribute("href")?.match(/\?(\d+)$/)?.[1]),
@@ -63,7 +70,9 @@ async function _proxiedModuleInfoFetcher(id: number): Promise<ModuleInfo> {
 
 export async function getModuleInfo(id: number): Promise<ModuleInfo> {
   const lastAccessedAt = new Date().toISOString()
-  const cached = await getItem<{info: ModuleInfo; lastAccessedAt: string}>(`module/${id}/info`)
+  const cached = await getItem<{info: ModuleInfo; lastAccessedAt: string}>(
+    `module/${id}/info`,
+  )
   if (cached !== null) {
     branchOff(async () => {
       await setItem(`module/${id}/info`, {...cached, lastAccessedAt})

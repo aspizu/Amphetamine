@@ -6,7 +6,7 @@
     "**/dist/**": true,
     "**/*.gen.*": true
   },
-  "editor.rulers": [96],
+  "editor.rulers": [88],
   "[typescript]": {
     "editor.defaultFormatter": "oxc.oxc-vscode"
   },

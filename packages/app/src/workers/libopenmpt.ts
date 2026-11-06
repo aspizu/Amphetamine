@@ -17,19 +17,21 @@ function _errorMessage(error: unknown): string {
   return error instanceof Error ? error.message : String(error)
 }
 
-self.onmessage = async (event: MessageEvent<RenderModuleToWavRequest>) => {
+self.addEventListener("message", (event: MessageEvent<RenderModuleToWavRequest>) => {
   const {moduleBytes, options} = event.data
-  const result = await ResultAsync.fromPromise(
+  void ResultAsync.fromPromise(
     renderModuleToWavBuffer(moduleBytes, options),
     _errorMessage,
   ).match(
-    (wavBytes) => ({ok: true, wavBytes}) satisfies RenderModuleToWavResponse,
-    (error) => ({ok: false, error}) satisfies RenderModuleToWavResponse,
+    (wavBytes) => {
+      self.postMessage({ok: true, wavBytes} satisfies RenderModuleToWavResponse, {
+        transfer: [wavBytes],
+      })
+    },
+    (error) => {
+      self.postMessage({ok: false, error} satisfies RenderModuleToWavResponse, {
+        transfer: [],
+      })
+    },
   )
-
-  if (result.ok) {
-    self.postMessage(result, {transfer: [result.wavBytes]})
-  } else {
-    self.postMessage(result)
-  }
-}
+})

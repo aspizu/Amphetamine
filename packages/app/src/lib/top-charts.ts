@@ -6,7 +6,7 @@ export interface ChartPage {
   entries: number[]
 }
 
-export const getMusicCharts = async (type: MusicChart, page = 1): Promise<ChartPage> => {
+export async function getMusicCharts(type: MusicChart, page = 1): Promise<ChartPage> {
   const chartPaths = {
     tophits: "request=view_chart&query=tophits",
     topscore: "request=view_chart&query=topscore",
@@ -31,10 +31,14 @@ export const getMusicCharts = async (type: MusicChart, page = 1): Promise<ChartP
   )
 
   const entries = Array.from(
-    doc.querySelectorAll<HTMLAnchorElement>("a.chart-listing-title[href^='module.php?']"),
+    doc.querySelectorAll<HTMLAnchorElement>(
+      "a.chart-listing-title[href^='module.php?']",
+    ),
   ).flatMap((link) => {
     const id = Number(link.getAttribute("href")?.match(/\?(\d+)$/)?.[1])
-    if (!Number.isInteger(id)) return []
+    if (!Number.isInteger(id)) {
+      return []
+    }
     return [id]
   })
 

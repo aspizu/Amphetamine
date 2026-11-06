@@ -1,3 +1,5 @@
+import * as React from "react"
+
 import PlayerControls from "./player-controls"
 import PlayerDetails from "./player-details"
 import PlayerProgress from "./player-progress"

@@ -7,6 +7,12 @@
     "dist"
   ],
   "type": "module",
+  "imports": {
+    "#libopenmpt": {
+      "types": "./src/emscripten.d.ts",
+      "default": "./dist/libopenmpt.js"
+    }
+  },
   "main": "./src/index.ts",
   "types": "./src/index.ts",
   "exports": {

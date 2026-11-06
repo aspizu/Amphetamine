@@ -1,18 +1,23 @@
 const tasks = new Set<Promise<unknown>>()
 
-function formatError(error: unknown): any {
-  if (error instanceof AggregateError)
-    return [error.stack, ...error.errors.map(formatError)].join("\nCaused by: ")
+function _formatError(error: unknown): unknown {
+  if (error instanceof AggregateError) {
+    return [error.stack, ...error.errors.map(_formatError)].join("\nCaused by: ")
+  }
 
-  if (error instanceof Error)
+  if (error instanceof Error) {
     return error.cause
-      ? `${error.stack ?? error.message}\nCaused by: ${formatError(error.cause)}`
+      ? `${error.stack ?? error.message}\nCaused by: ${String(_formatError(error.cause))}`
       : (error.stack ?? error.message)
+  }
 
-  if (typeof error === "object")
+  if (typeof error === "object") {
     try {
       return JSON.stringify(error, null, 2)
-    } catch {}
+    } catch {
+      return error
+    }
+  }
 
   return error
 }
@@ -24,7 +29,7 @@ export function branchOff(task: () => Promise<unknown>, message = "task failed")
   void promise
     .catch((error) => {
       console.group(`[background] ${message}`)
-      console.error(formatError(error))
+      console.error(_formatError(error))
       console.groupEnd()
     })
     .finally(() => tasks.delete(promise))

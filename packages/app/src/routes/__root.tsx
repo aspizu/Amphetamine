@@ -1,4 +1,5 @@
 import {createRootRoute, Outlet} from "@tanstack/react-router"
+import * as React from "react"
 
 import Player from "#components/player.tsx"
 import Sidebar from "#components/sidebar.tsx"

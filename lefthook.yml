@@ -1,10 +1,18 @@
 pre-commit:
-  parallel: true
   jobs:
-    - name: fmt
-      run: pnpm fmt:check
-    - name: lint
-      run: pnpm lint
+    - name: oxfmt
+      glob: "*.{cjs,css,cts,html,js,jsx,json,jsonc,md,mdx,mjs,mts,scss,ts,tsx,yaml,yml}"
+      run: pnpm exec oxfmt {staged_files}
+      stage_fixed: true
+
+    - name: oxlint
+      glob: "*.{cjs,cts,js,jsx,mjs,mts,ts,tsx}"
+      run: pnpm exec oxlint {staged_files}
+
+    - name: tailwind-lint
+      glob: "packages/app/src/**/*.{html,js,jsx,md,mdx,svelte,ts,tsx,vue}"
+      run: pnpm exec tailwind-lint --config packages/app/src/styles/global.css {staged_files}
+
     - name: rust-clippy
       run: cargo clippy --manifest-path packages/app/src-tauri/Cargo.toml --all-targets -- -D warnings
 

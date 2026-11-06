@@ -1,3 +1,4 @@
+import * as React from "react"
 import {useState} from "react"
 
 import {branchOff} from "#lib/background"
@@ -5,7 +6,12 @@ import * as player from "#lib/player"
 import {useStore} from "#lib/store"
 
 import ModuleList from "./module-list"
-import {Accordion, AccordionContent, AccordionItem, AccordionTrigger} from "./ui/accordion"
+import {
+  Accordion,
+  AccordionContent,
+  AccordionItem,
+  AccordionTrigger,
+} from "./ui/accordion"
 
 function _removeQueueItem(id: number) {
   let send = false
@@ -64,20 +70,25 @@ function _moveQueueItemDown(id: number) {
 
 function _selectQueueItem(id: number) {
   branchOff(async () => {
-    let send = false
+    const store = useStore.getState()
+    const newQueueHead = store.queue.indexOf(id)
+    if (newQueueHead === -1 || player.usePlayerState.getState().loadingModuleId === id)
+      return
+    if (newQueueHead === store.queueHead && player.isLoaded()) {
+      await player.play()
+      return
+    }
     useStore.setState((draft) => {
-      const newQueueHead = draft.queue.indexOf(id)
-      if (newQueueHead === draft.queueHead || newQueueHead === -1) return
       draft.queueHead = newQueueHead
-      send = true
     })
-    if (!send) return
     const res = await player.loadSong()
     if (res.isErr()) {
       console.error("Failed to load song", res.error)
       return
     }
-    if (res.value) await player.play()
+    if (res.value) {
+      await player.play()
+    }
   })
 }
 

@@ -2,6 +2,20 @@ import {branchOff} from "./background"
 import * as player from "./player"
 import {useStore} from "./store"
 
+export function createPlaylist(modules: number[] = []) {
+  const playlists = useStore.getState().playlists
+  const names = new Set(playlists.map((playlist) => playlist.name))
+  let name = "Untitled playlist"
+  for (let number = 2; names.has(name); number++) {
+    name = `Untitled playlist ${number}`
+  }
+  const index = playlists.length
+  useStore.setState((draft) => {
+    draft.playlists.push({name, pl: [...modules]})
+  })
+  return index
+}
+
 export function playPlaylist(modules: number[], selectedId: number) {
   const selectedIndex = modules.indexOf(selectedId)
   if (selectedIndex === -1) return
@@ -21,6 +35,8 @@ export function playPlaylist(modules: number[], selectedId: number) {
       console.error("Failed to load song", result.error)
       return
     }
-    if (result.value) await player.play()
+    if (result.value) {
+      await player.play()
+    }
   }, "play playlist")
 }

@@ -2,6 +2,7 @@ import {IconContext} from "@phosphor-icons/react"
 import {QueryClient, QueryClientProvider} from "@tanstack/react-query"
 import {createRouter, RouterProvider} from "@tanstack/react-router"
 import NProgress from "nprogress"
+import * as React from "react"
 import {StrictMode} from "react"
 
 import "nprogress/nprogress.css"
@@ -26,7 +27,9 @@ const router = createRouter({
 
 NProgress.configure({showSpinner: false})
 router.subscribe("onBeforeNavigate", ({hrefChanged}) => {
-  if (hrefChanged) NProgress.start()
+  if (hrefChanged) {
+    NProgress.start()
+  }
 })
 router.subscribe("onResolved", () => NProgress.done())
 

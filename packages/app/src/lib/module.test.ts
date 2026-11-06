@@ -1,5 +1,3 @@
-// @vitest-environment jsdom
-
 import {beforeEach, describe, expect, it, vi} from "vitest"
 
 const mocks = vi.hoisted(() => ({
@@ -59,7 +57,9 @@ describe("getModule", () => {
     await Promise.all(mocks.backgroundTasks)
 
     expect(result.isOk() && result.value).toEqual(bytes)
-    expect(fetch).toHaveBeenCalledWith("https://api.modarchive.org/downloads.php?moduleid=73")
+    expect(fetch).toHaveBeenCalledWith(
+      "https://api.modarchive.org/downloads.php?moduleid=73",
+    )
     expect(mocks.putBlob).toHaveBeenCalledWith("module/73/blob", bytes)
     expect(mocks.setItem).toHaveBeenCalledWith("module/73/blob-info", {
       lastAccessedAt: expect.stringMatching(/^\d{4}-\d{2}-\d{2}T/),
