@@ -34,7 +34,7 @@ export default function Sidebar() {
         activeProps={{className: _activeLinkClass}}
       >
         <HeartIcon className="size-4 shrink-0" />
-        <span className="truncate">Favourites</span>
+        <span className="truncate">Top Favourites</span>
       </Link>
       <Link
         to="/charts/$chart"

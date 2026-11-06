@@ -1,8 +1,11 @@
+import {useState} from "react"
+
 import {branchOff} from "#lib/background"
 import * as player from "#lib/player"
 import {useStore} from "#lib/store"
 
 import ModuleList from "./module-list"
+import {Accordion, AccordionContent, AccordionItem, AccordionTrigger} from "./ui/accordion"
 
 function _removeQueueItem(id: number) {
   let send = false
@@ -85,15 +88,38 @@ const _queueActions = {
 }
 
 export default function Queue() {
+  const [expandedSections, setExpandedSections] = useState<string[]>([])
   const queue = useStore((state) => state.queue)
   const queueHead = useStore((state) => state.queueHead)
+  const playedIds = queue.slice(0, queueHead)
   return (
-    <ModuleList
-      ids={queue}
-      activeId={queue[queueHead]}
-      historyIds={new Set(queue.slice(0, queueHead))}
-      onSelect={_selectQueueItem}
-      actions={_queueActions}
-    />
+    <div className="divide-y">
+      {playedIds.length > 0 && (
+        <Accordion value={expandedSections} onValueChange={setExpandedSections}>
+          <AccordionItem value="played">
+            <AccordionTrigger className="h-6 items-center justify-center gap-1 rounded-none px-2 py-0 text-xs font-normal text-muted-foreground hover:bg-card hover:no-underline">
+              Recently Played
+            </AccordionTrigger>
+            <AccordionContent>
+              <ModuleList
+                ids={playedIds}
+                historyIds={new Set(playedIds)}
+                onSelect={(id) => {
+                  setExpandedSections([])
+                  _selectQueueItem(id)
+                }}
+                actions={_queueActions}
+              />
+            </AccordionContent>
+          </AccordionItem>
+        </Accordion>
+      )}
+      <ModuleList
+        ids={queue.slice(queueHead)}
+        activeId={queue[queueHead]}
+        onSelect={_selectQueueItem}
+        actions={_queueActions}
+      />
+    </div>
   )
 }

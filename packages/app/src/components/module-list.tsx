@@ -135,7 +135,7 @@ export default function ModuleList({
   actions,
 }: ModuleListProps) {
   return (
-    <div className="flex flex-col divide-y overflow-y-scroll">
+    <div className="flex flex-col divide-y">
       {ids.map((id) => (
         <_ModuleListItem
           key={id}

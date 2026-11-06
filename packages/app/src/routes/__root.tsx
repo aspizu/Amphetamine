@@ -8,7 +8,9 @@ function RootComponent() {
     <div className="flex h-dvh flex-col">
       <div className="grid min-h-0 flex-1 grid-cols-[200px_1fr] overflow-y-hidden">
         <Sidebar />
-        <Outlet />
+        <main className="min-h-0 min-w-0 overflow-y-auto">
+          <Outlet />
+        </main>
       </div>
       <div className="flex justify-center border-t">
         <Player />
